@@ -1,0 +1,30 @@
+/* Change the background color of the ToC */
+.toc {
+  background-color: #f8f9fa; /* Light gray */
+  border: 1px solid #ddd; /* Add border */
+  padding: 10px;
+  border-radius: 5px; /* Rounded corners */
+}
+
+/* Style ToC links */
+.toc a {
+  color: #007acc; /* Blue links */
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.toc a:hover {
+  color: #ffd111; /* Orange on hover */
+  text-decoration: underline;
+}
+
+/* Change font size of ToC */
+.toc {
+  font-size: 14px;
+}
+
+/* Add spacing between ToC items */
+.toc ul {
+  padding-left: 15px;
+  line-height: 1.5;
+}

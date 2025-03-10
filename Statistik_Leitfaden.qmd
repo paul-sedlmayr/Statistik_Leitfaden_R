@@ -1,0 +1,511 @@
+---
+title: "Statistik Leitfaden R"
+author: "Paul Sedlmayr"
+format:
+  html:
+    toc: true  # Enable table of contents
+    toc-depth: 3  # Adjust depth (optional)
+    toc-location: left  # Set ToC position (left, right)
+---
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(tidy = TRUE, fig.width = 5, fig.height = 3, dev = "png",
+                      cache = TRUE, echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+# Einführung
+
+## Installation & Laden von Packages
+
+Im ersten Schritt installieren und laden wir Packages. Diese enthalten Funktionen, welche wir später nutzen werden. Wenn man ein Package, zum Beispiel das Package tidyverse, zum ersten Mal verwendet, muss man es mit der Funktion `install.packages("tidyverse")` installieren. Anschließen kann man es mit der Funktion `library(tidyverse)` laden.
+
+Um die Packages im Folgenden Code zu installieren, entferne das `#` um den Kommentar `#install.packages("tidyverse")` zu einer Zeile Code zu verwandeln.
+
+```{r install packages, message=FALSE}
+
+# Dies ist ein Kommentar
+
+# Packages installieren
+#install.packages("tidyverse")
+#install.packages("rempsyc")
+#install.packages("haven")
+#install.packages("car")
+#install.packages("effectsize")
+#install.packages("psych")
+#install.packages("GGally")
+
+# Packages laden
+library(tidyverse) # All-around package
+library(rempsyc) # Convenience-functions für Psychologie
+library(haven) # SPSS-Files (.sav) einlesen
+library(car) # Anova
+library(effectsize) # Effektstärkten
+library(psych) # All-around package für Statistik
+library(GGally) # Korrelationsmatrix
+
+```
+
+## Grundlegende Operatoren
+
+Mit dem assignment operator `<-` kann man Variablen erstellen. Den Inhalt der Variable kann man ganz einfach einsehen, indem man den Namen der Variable in der Konsole / im Skript ausführt. Alternativ kann man die Funktion `print()` am jeweiligen Objekt verwenden. Die Funktion `c()` wird verwendet wenn wir einzelne Objekte zu einem Vektor zu kombinieren. Dies bietet viele Möglichkeiten, z.B. wenn wir mehrere Zeilen oder Spalten aus einer Daten-Tabelle ("Dataframe") verwenden wollen `df[c("Reihe_1", "Reihe_2"), c("Spalte_1", "Spalte_2")]`.
+
+```{r basic operators}
+x <- 10 # oder x = 10
+x
+
+text_y <- "Hello"
+text_z <- "WORLD"
+
+# Print: um ein Objekt zu "drucken"
+print(text_y)
+
+text_y_z <- c(text_y, text_z)
+text_y_z
+```
+
+Der "Pipe-Operator" `%>%` aus dem `tidyverse`-Package wird verwendet, um eine Funktion an einem Objekt anzuwenden, ohne das Objekt in der Funktion stehen zu haben. Obwohl das nichts am Output verändert, nutzen wir ihn, um eine Struktur im Code zu behalten. Dies ist speziell dann wichtig, wenn man mehrere Funktionen nacheinander anwendet.
+
+Wenn wir beispielsweise eine Tabelle von Autos `mtcars` 1. nach der Variable `mpg` (miles per gallon) filtern wollen, 2. bestimmte Variablen auswählen wollen und 3. die Autos dann nach der Leistung (`hp`) ordnen wollen, brauchen wir nicht zwangsläufig 3 Zeilen Code dafür. Beide Herangehensweisen kommen zum selben Ergebnis
+
+```{r}
+# 1. Normal
+cars_filtered <- filter(mtcars, mpg > 20)
+cars_selected <- select(cars_filtered, mpg, cyl, hp)
+cars_final <- arrange(cars_selected, desc(hp))
+
+# 2. Mit Pipe %>%
+cars_final <- mtcars %>% filter(, mpg > 20) %>% select(, mpg, cyl, hp) %>% arrange(, desc(hp))
+
+# Die ersten 3 Reihen anzeigen
+head(cars_final, 3)
+```
+
+## Mathematische Operatoren
+
+Man kann einfache Berechnungen mit Zahlen oder Vektoren durchführen. Mit eckigen Klammern kann man Positionen in einem Vektor auswählen / einsehen.
+
+```{r}
+x^2
+
+# Vector erstellen
+vec_1 <- c(5, 10, 15)
+
+vec_1
+
+vec_1[1]
+vec_1[2]
+vec_1[3]
+
+vec_1 * 2
+```
+
+| Operation      | Zeichen |
+|----------------|---------|
+| Addition       | \+      |
+| Multiplikation | \*      |
+| Division       | /       |
+| Potenz         | \^      |
+
+## Files einlesen
+
+Um ein File einzulesen, müssen wir den Pfad des Files angeben. Befinden sich das Skript und File im selben Ordner, genügt für das csv-File "`data_1.csv`" der Pfad `".//data_1.csv"`.
+
+```{r file einlesen, message=FALSE}
+# CSV-Datei einlesen
+data <- read_csv(".//data_1.csv")
+```
+
+Um SPSS Files mit dem Typ `.sav` einzulesen, kann man folgende Funktion aus dem `haven`-Package verwenden:
+
+```{r SPSS files einlesen, message=FALSE}
+# SAV-Datei einlesen
+data_2 <- read_sav(".//data_2.sav")
+```
+
+## Überblick verschaffen
+
+Um sich einen Überblick über ein Datenfile zu verschaffen, eignen sich die folgenden Funktionen. Hinweis: `$` wird verwendet, um eine Spalte auszuwählen.
+
+```{r}
+# Ersten fünf Zeilen
+head(data, 5)
+
+colnames(data)
+
+summary(data$IQ)
+
+table(data$Rauchen)
+```
+
+# Variablen Transformation
+
+## Variablen umbennen / umkodieren
+
+```{r variable transformation}
+# Variable umbenennen: Geschlecht ist der neue Name, gender der alte Name
+data <- data %>% rename("Geschlecht" = gender)
+
+# Variable transformieren: zu einem Faktor, d.h. Nominalskalenniveau
+data$Bildungsstand <- data$Bildungsstand %>% as_factor()
+
+# Keine Angabe in Variable "Rauchen" wird zu NA
+data$Rauchen[data$Rauchen == "Keine Angabe"] <- NA
+```
+
+## z-Standardisierung
+
+`mutate()` wird häufig verwendet, um Variablen zu transformieren. Um eine z-standardisierte Variable (hier: `BDI_z`) aus der herkömmlichen Variable (hier: `BDI`) zu erstellen, nutzen wir `scale()`.
+
+```{r}
+data <- data %>% mutate(BDI_z = scale(BDI))
+```
+
+# Deskriptive Statistik
+
+Wir können ganz einfach den Mittelwert und die Standardabweichung von einer Spalte berechnen.
+
+```{r}
+mean(data$Gewissenhaftigkeit)
+sd(data$Gewissenhaftigkeit)
+```
+
+Um uns deskr. Statistiken pro Gruppe ausgeben zu lassen, müssen wir `group_by()` verwenden.
+
+```{r}
+descriptives <- data %>% 
+  group_by(Rauchen) %>%
+  summarize(
+    M = mean(Gewissenhaftigkeit),
+    SD = sd(Gewissenhaftigkeit),
+    n = n(),
+  )
+
+descriptives
+```
+
+# Statistische Verfahren
+
+::: callout-important
+#### Die meisten Funktionen statistischer Verfahren sind folgendermaßen aufgebaut:
+
+1.  `verfahren(Abhängige_Variable ~ Unabhängige_Variable, data = Datensatz)`.
+
+2.  `verfahren(Variable_A, Variable_B)`.
+:::
+
+# t-Test
+
+### t-Test über einen Mittelwert:
+
+$H_0:$ Der IQ beträgt in der Population im Durchschnitt einen Wert von 100.
+
+```{r}
+t.test(data$IQ, mu = 100)
+```
+
+### t-Test über zwei unabhängige Stichproben:
+
+$H_0:$ RaucherInnen und nicht-RaucherInnen unterscheiden sich **nicht** in der Gewissenhaftigkeit.
+
+```{r}
+t.test(Gewissenhaftigkeit ~ Rauchen, data = data)
+```
+
+### t-Test über zwei abhängige Stichproben:
+
+```{r}
+t.test(data$Statistiknote, data$Mathematiknote, paired = TRUE)
+```
+
+# Varianzanalyse (ANOVA)
+
+### Einfaktorielle Varianzanalyse
+
+```{r}
+# Hier filtern wir zu erst nur nach Fällen der Level 3, 4 und 5
+data_filtered <- data %>% filter(Bildungsstand %in% c(3, 4, 5))
+
+# Wie viele Personen pro Gruppe?
+table(data_filtered$Bildungsstand)
+
+anova_result <- aov(Allgemeinwissen ~ Bildungsstand, data = data_filtered)
+
+summary(anova_result)
+```
+
+### Zweifaktorielle Varianzanalyse (Between)
+
+```{r anova results, message=FALSE}
+data_wor <- read_delim("Worry143.csv", delim = ";")
+
+data_wor <- data_wor %>% rename(gender = "Geslacht")
+data_wor$gender <- data_wor$gender %>% as_factor()
+data_wor$S_E <- data_wor$S_E %>% as_factor()
+```
+
+Wenn wir mehrere Faktoren haben und uns potentielle Interaktionen interessieren, müssen wir die Syntax `AV ~ UV1 * UV2` verwenden. Wenn uns lediglich die Haupteffekte interessieren, können wir alternativ `AV ~ UV1 + UV2` verwenden.
+
+```{r}
+anova_result <- aov(Wor ~ gender * S_E, data = data_wor)
+
+summary(anova_result)
+```
+
+#### Zweifaktorielle Varianzanalyse (Within)
+
+#### Spezialfall: Unbalanciertes Design
+
+Hinweis: die Funktion `aov()` kann bei stark unbalancierten Designs (= nicht gleich viele Personen pro Gruppe) Probleme haben. Dies ist besonders relevant, wenn man mehrere Faktoren und ggf. Interaktionen untersuchen möchchte. In diesem Fall sollte die Funktion `Anova(, type = 3)` um die bestehende ANOVA Funktion angewandt werden. In diesem Fall können wir uns das Ergebnis ohne `summary()` anzeigen lassen.
+
+*Im Folgenden ist die Anwendung jedoch im balancierten Design:*
+
+```{r}
+anova_type_3 <- Anova(aov(Wor ~ gender*S_E, data = data_wor), type = 3)
+
+anova_type_3
+```
+
+## Effektgrößen ANOVA
+
+Das partielle Eta-Quadrat $\hat \eta^2$ können wir aus den Ergebnissen der gerechneten Varianzanalyse berechnen. Hierfür können wir die `eta_squared()`-Funktion aus dem Package `effectsize` verwenden. Diese berechnet zusätzlich ein 95%-iges Konfidenzintervall. Mit dem Parameter `partial = TRUE`, bzw. `generalized = TRUE` können wir uns speziell für das partielle oder generalisierte Eta-Quadrat entscheiden.
+
+```{r eta_sq}
+effectsize::eta_squared(anova_result)
+```
+
+Das Omega-Quadrat $\hat \omega^2$ ist eine korrigierte Alternative zum Eta-Quadrat. *Das partielle Eta-Quadrat ist positiv gebiased: unsystematische Zufallsvarianz wird zum Teil für systematische Effektvarianz gehalten. Daher wird das pertielle Omega-Quadrat korrigiert und fällt idR. kleiner aus als das partielle Eta-Quadrat. Wenn es leicht negativ ausfällt, ist es auf 0.00 zu setzen.*
+
+```{r}
+omega_squared(anova_result)
+```
+
+## Voraussetzungen ANOVA
+
+### Homoskedastizität (Varianzhomogenität)
+
+::: callout-tip
+Homoskedastizität ist die eine zentrale Annahme in der ANOVA: die Varianzen in den Gruppen sind gleich, bzw. ähnlich groß ("homogen"). Eine Verletzung der Homoskedastizität ist schwerwiegender wenn die Gruppen unterschiedlich groß sind.
+:::
+
+#### Residual Plot
+
+Um die Homoskedastizität zu überprüfen, erstellen wir einen Residual Plot. Die Residuen bezeichnen Abweichungen eines beobachteten Wertes vom vorhergesagten Wert. In der ANOVA ist das die Abweichung eines Wert $y_{ij}$ vom jeweiligen Gruppenmittelwert $\hat y_j$. Daher: $e_{ij} = y_{ij} - \hat y_j$
+
+Wir wollen, dass die Residuen in allen Gruppen ähnlich groß sind. Zudem zeigt der Residual Plot potentielle Ausreißer.
+
+```{r label=fig-residualplot}
+# Extract residuals and fitted values
+residuals <- residuals(anova_result)
+fitted_values <- fitted(anova_result)
+
+# Plot residuals against fitted values
+plot(jitter(fitted_values), residuals, 
+     xlab = "Fitted Values", 
+     ylab = "Residuals", 
+     main = "Residuals of Sub-Groups")
+  abline(h = 0, col = "red") 
+```
+
+#### Levene's Test
+
+Alternativ können wir den Levene's Test verwenden. Dieser testet die $H_0$, dass die Varianzen der Gruppen homogen sind. Ein signifikanter Wert deutet darauf hin, dass die Varianzen heterogen sind, also eine Verletzung der Annahme der Homoskedastizität.
+
+```{r levene}
+leveneTest(Wor ~ gender*S_E, data = data_wor)
+```
+
+### Spherizität
+
+### Normalverteilung
+
+::: callout-tip
+Die ANOVA ist einigermaßen robust gegen eine Verletzung der Normalverteilung, es sei denn die Normalverteilung ist in der Population sehr schief oder Gruppengrößen sind unterschiedlich groß.
+:::
+
+Um zu überprüfen, ob unsere Stichprobe normalverteilt ist, sollten wir uns als erstes ein Histogram unserer Daten anschauen.
+
+```{r}
+# Wir haben die Residuen zuvor extrahiert: residuals <- residuals(anova_result)
+data_wor$residual <- residuals
+hist(data_wor$residual)
+```
+
+Mit dem Grafik-Package GGPlot haben wir mehr Gestaltungsmöglichkeiten:
+
+```{r}
+ggplot(data = data_wor, mapping = aes(x = residual)) + 
+  geom_histogram(bins = 20, color = "black", fill = "steelblue") # +
+  #facet_wrap(~S_E) + # ein eigenes Histogram pro Gruppe
+  labs(title = "Histogram", x = "Residuen", y = "Häufigkeit")
+```
+
+#### QQ-Plot
+
+Die Normalverteilung können wir mit QQ-Plots testen. Im QQ-Plots wird die Verteilung der Stichprobe oder der Residuen der Stichprobe (durch Punkte gekennzeichnet) mit der Normalverteilung (Strich) verglichen.
+
+```{r}
+# Wir haben die Residuen zuvor extrahiert: residuals <- residuals(anova_result)
+data_wor$residual <- residuals
+
+qqnorm(data_wor$residual, main = "QQ-Plot")
+qqline(data_wor$residual)
+```
+
+Alternativ hat das Package `Rempsyc` eine praktische Funktion für QQ-Plots:
+
+```{r rem qq}
+#nice_qq(data_wor, variable = "residual")
+```
+
+### Unabhängigkeit ...
+
+### Ausreißer
+
+# Korrelation
+
+Mittels `cor()` können wir den Korrelationskoeffizienten berechnen. Im Parameter `use` können wir angeben, wie wir mit fehlenden Werten (`NA`) umgehen wollen.
+
+```{r}
+cor(data$Mathematiknote, data$Statistiknote, use = "complete.obs")
+```
+
+Mit `cor.test()` können wir auf Signifikanz testen. Zudem wird automatisch ein `95%`-Konfidenzintervall ausgegeben
+
+```{r}
+cor.test(data$Extraversion, data$Neurotizismus)
+
+cor_ex_neu <- cor.test(data$Extraversion, data$Neurotizismus, use = "complete.obs", method = "pearson")
+
+r_value <- cor_ex_neu$estimate  # Pearson-Korrelation (r)
+p_value <- cor_ex_neu$p.value    # p-value
+ci_lower <- cor_ex_neu$conf.int[1]  # Untere Grenze des 95% KI
+ci_upper <- cor_ex_neu$conf.int[2]  # Obere Grenze des 95% KI
+
+print(paste0("Extravertierte Personen weisen geringeren Neurotizismus auf, r = ",
+             round(r_value, 2), 
+             ", 95% KI [", round(ci_lower, 2), ", ", round(ci_upper, 2), "]" , "."))
+```
+
+#### Rangkorrelation
+
+Im Parameter `method` können wir ebenfalls die Spearman-Korrelation und Kendall's Tau auswählen, welche Rang-basiert sind.
+
+```{r}
+cor.test(data$Mathematiknote, data$Statistiknote, method = "spearman")
+cor.test(data$Mathematiknote, data$Statistiknote, method = "kendall")
+```
+
+#### Korrelationsmatrix
+
+Es gibt verschiedene Möglichkeiten, eine Korrelations-Matrix oder Scatterplot-Matrix erstellen zu lassen:
+
+1.  Die `cor()`-Funktion mit mehreren Spalten eines Dataframes.
+
+```{r}
+cor(data[, c("IQ", "Mathematiknote", "Allgemeinwissen")], method = "pearson", use = "pairwise.complete.obs")
+```
+
+2.  `ggpairs()` aus dem `GGally`-Package.
+
+Hier können wir uns eine Hälfte der Matrix als Scatterplot Matrix ausgeben lassen (unter `lower`). Die `method` gibt hier an, ob die Regressionslinie gerade sein soll (`method = "lm"`) oder eine "lokale", daher nicht-gerade Regressionslinie (`method = "loess"`). Letzteres ist sinnvoll, um die Voraussetzung der **Linearität** überprüfen will. Zusätzlich kann man sich den Standardfehler der Regressionslinie angeben lassen (`se = TRUE`).
+
+```{r ggpairs, message=FALSE, warning=FALSE}
+ggpairs(data, columns = c("IQ", "Mathematiknote", "Allgemeinwissen"),
+        lower = list(continuous = wrap("smooth", method = "loess", se = TRUE)),
+        upper = list(continuous = wrap("cor")
+        )
+)
+```
+
+3.  Das `psych()`-Package bietet eine ähnliche Funktion.
+
+```{r}
+pairs.panels(data[, c("IQ", "Mathematiknote", "Allgemeinwissen")], ellipses = F)
+```
+
+# Einfache Lineare Regression
+
+Die Syntax der Einfachen Linearen Regression ist im selben Schema wie zuvor: `AV ~ UV`. Über Summary können wir uns wieder die Ergebnisse ausgeben lassen.
+
+Der Beta-Koeffizient von Mathematiknote ist unter `Estimate` zu finden. Daneben den zugehörigen Standardfehler, t-Wert und zugehörigen p-Wert. Das `Multiple R-squared` entspricht dem $R^2$, der gesamten durch das Modell aufgeklärten Varianz.
+
+```{r}
+model_simple_regression <- lm(Allgemeinwissen ~ IQ, data = data)
+
+summary(model_simple_regression)
+```
+
+::: callout-hint
+(Insert Zusammenhang $\beta$ und $R^2$ in SLR)
+:::
+
+Das Package `rempsyc` bietet nützliche Funktionen, um Ergebnis-Tabellen zu erstellen. Diese sind zum Großteil APA-konform. Es ist jedoch ratsam, das Format noch einmal auf Richtigkeit zu überprüfen.
+
+```{r}
+model_slr_results <- nice_lm(model_simple_regression)
+nice_table(model_slr_results, 
+           title = c("Tabelle 1", "Zusammenhang von Allgemeinwissen und Intelligenz"),
+           note = c(
+             paste("Diese Tablle ist als Beispiel gedacht. Alle Zusammenhänge sind frei erfunden.", sep = " "), "* p < .05, ** p < .01, *** p < .001"))
+```
+
+# Multiple Lineare Regression
+
+Die Syntax für die MLR bleibt gleich: wir fügen weiter Prädiktoren (UVs) mit `+` ein, sowie eine Interaktion durch `*`.
+
+```{r}
+model_mult_regression <- lm(Allgemeinwissen ~ Mathematiknote + IQ + Mathematiknote * IQ, data = data)
+
+summary(model_mult_regression)
+```
+
+```{r}
+model_mlr_results <- nice_lm(model_mult_regression)
+nice_table(model_mlr_results, 
+           title = c("Tabelle 2", "Zusammenhang von Allgemeinwissen, Mathematik und Intelligenz"),
+           note = c(
+             paste("Diese Tablle ist als Beispiel gedacht. Alle Zusammenhänge sind frei erfunden.", sep = " "), "* p < .05, ** p < .01, *** p < .001"))
+```
+
+## Voraussetzungen Regression
+
+Die folgende Abbildung zeit die Relevanz der Prüfung der Voraussetzungen in der Regression. Jeder der vier Datensätze verfügt über die selbe Regressionsgerade und $R^2 = 0.67$. Links oben ($y_1$) ist keine der Voraussetzungen verletzt. Nicht alle Voraussetzungen sind abgebildet.
+
+![](images/Anscombe's_quartet_3.svg)
+
+[Ascombe's Quartett auf Wikipedia](https://de.wikipedia.org/wiki/Anscombe-Quartett#/media/Datei:Anscombe's_quartet_3.svg)
+
+### Homoskedastizität
+
+::: callout-tip
+:::
+
+#### Residual Plot
+
+Ähnlich wie in der ANOVA können wir einen Residual Plot verwenden um die Homoskedastizität zu überprüfen. Die Residuen sind Abweichungen eines beobachteten Wertes von dem vorhergesagten Wert. In der Regression ist das die Abweichung eines Wert $y_{i}$ vom bedingten Erwartungswert $E(y_i | X_i = x_i)$. Konkret bedeutet das die Abweichung eines Werts von der Regressionsgeraden (in y). Die Regressionsgerade gibt an, welchen y-Wert wird basierend auf dem x-Wert erwarten würden ($E(y_i | X_i = x_i)$). Daher: $e_{i} = y_{i} - \hat y_i$
+
+Ist die Varianzhomogenität gegeben, streuen die Werte zufällig um null. In diesem Fall zeigt sich das darin, dass wir keine Muster in den Residuen erkennen. Eine Verletzung anderer Voraussetzungen (Linearität, Unabhängigkeit der Messwerte, Ausreißer) kann sich ebenfalls im Residual Plot zeigen.
+
+```{r label=fig-residuenplotregression}
+# Extract residuals and fitted values
+residuals <- residuals(model_mult_regression)
+fitted_values <- fitted(model_mult_regression)
+
+# Plot residuals against fitted values
+plot(jitter(fitted_values), residuals, 
+     xlab = "Fitted Values", 
+     ylab = "Residuals", 
+     main = "Residuals")
+  abline(h = 0, col = "red") 
+
+```
+
+Hinweis: der Code für den obigen Residual Plot ist identisch zum Residual Plot der ANOVA.
+
+### Linearität
+
+### Normalverteilung der Residuen
+
+### Ausreißer
+
+www.kferde.at
