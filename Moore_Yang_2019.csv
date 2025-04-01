@@ -1,0 +1,17 @@
+"","Behavioral intention (ß)",
+"Block 1","Study 1","Study 2"
+" Age","−.03","−.05"
+" Female",".04",".11 *"
+" White","−.15","−.10***"
+" Political Orientation","−.04","−.06*"
+" R2",".10",".17"
+"Block 2",,
+" Environmental Attitude","−.04",".20***"
+" Cognitive Empathy","−.13",".05*"
+" Affective Empathy",".02",".18**"
+" Δ R2",".01",".09"
+"Block 3",,
+" Eco Guilt",".60***",".38***"
+" Δ R2",".33",".11"
+" Adjusted R2",".34",".36"
+" ANOVA","F(8, 52) = 4.90***","F(8, 287) = 20.93***"

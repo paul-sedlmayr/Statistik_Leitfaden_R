@@ -15,3 +15,8 @@ car
 effectsize
 psych
 GGally
+Matrix
+lme4
+afex
+emmeans
+boot
