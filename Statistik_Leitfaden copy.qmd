@@ -1,0 +1,1067 @@
+---
+title: "Statistik Leitfaden R"
+author: "Paul Sedlmayr"
+date: "`r Sys.Date()`"
+format:
+  html:
+    toc: true  # Enable table of contents
+    #css: toc-styles.css
+    toc-depth: 3  # Adjust depth (optional)
+    toc-location: left  # Set ToC position (left, right)
+    toc-title: Überblick
+    header-includes: |
+      <img src="logo.png" style="position:absolute; top:10px; right:10px; height:50px;">
+page-layout: article
+bibliography: references.bib
+csl: chicago-fullnote-bibliography
+---
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(tidy = TRUE, fig.width = 5, fig.height = 3, dev = "png",
+                      cache = TRUE, echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+::: callout-tip
+### Vorwort
+
+Dieser Leitfaden für statistische Datenanalyse in R soll als ergänzende Ressource zur Lehre an der Universität Graz dienen. Er richtet sich speziell an Studierende, die R für Bachelor- oder Masterarbeiten verwenden wollen, oder sich einfach mit den Grundlagen und Anwendungen statistischer Methoden in R vertraut machen möchten.
+
+Ziel ist es, eine kompakte und verständliche Anleitung bereitzustellen, die das eigenständige Arbeiten mit R erleichtert. Ich erhebe keinen Anspruch auf absolute Richtigkeit oder Vollständigkeit der Inhalte. Der Leitfaden wird regelmäßig aktualisiert. Falls Ihnen Fehler auffallen oder Sie Verbesserungsvorschläge haben, freue ich mich über eine Rückmeldung per E-Mail (`paul.sedlmayr@uni-graz.at`).
+
+Ich hoffe, dass dieser Leitfaden einen nützlichen Beitrag zum Verständnis statistischer Methoden in R leistet und die Anwendung in der Praxis erleichtert.
+:::
+
+
+::: callout-warning
+### Diese Seite ist noch nicht fertig gestellt. 
+:::
+
+
+# Einführung
+
+## Installation & Laden von Packages
+
+Im ersten Schritt installieren und laden wir Packages. Diese enthalten Funktionen, welche wir später nutzen werden. Wenn man ein Package, zum Beispiel das Package tidyverse, zum ersten Mal verwendet, muss man es mit der Funktion `install.packages("tidyverse")` installieren. Anschließen kann man es mit der Funktion `library(tidyverse)` laden.
+
+Um die Packages im Folgenden Code zu installieren, entferne das `#` um den Kommentar `#install.packages("tidyverse")` zu einer Zeile Code zu verwandeln.
+
+```{r install packages, message=FALSE}
+
+# Dies ist ein Kommentar
+
+# Packages installieren
+#install.packages("tidyverse")
+
+# Diese Funktion müssen wir für alle noch nicht herunntergeladenen Packages anwenden. Weitere Packages im Skript:
+# "rempsyc", "haven", "car", "effectsize" ,"psych", "GGally", "afex", "emmeans", "boot"
+
+# Packages laden
+library(tidyverse) # All-around package
+library(rempsyc) # Convenience-functions für Psychologie
+library(haven) # SPSS-Files (.sav) einlesen
+library(car) # Anova
+library(afex) # Anova
+library(emmeans) # Post Hoc Tests
+library(effectsize) # Effektstärkten
+library(psych) # All-around package für Statistik
+library(GGally) # Korrelationsmatrix
+library(lm.beta) # Standardiertes Regressionsgewicht
+library(flextable) # Tabelle in Word konvertieren
+library(broom) # Für schöne lm-Tabelle
+library(boot) # Bootstrapping
+```
+
+### Grundlegende Operatoren
+
+Mit dem assignment operator `<-` kann man Variablen erstellen. Den Inhalt der Variable kann man ganz einfach einsehen, indem man den Namen der Variable in der Konsole / im Skript ausführt. Alternativ kann man die Funktion `print()` am jeweiligen Objekt verwenden. Die Funktion `c()` wird verwendet wenn wir einzelne Objekte zu einem Vektor zu kombinieren. Dies bietet viele Möglichkeiten, z.B. wenn wir mehrere Zeilen oder Spalten aus einer Daten-Tabelle ("Dataframe") verwenden wollen `df[c("Reihe_1", "Reihe_2"), c("Spalte_1", "Spalte_2")]`.
+
+```{r basic operators}
+# Dies ist ein Kommentar
+x <- 10 # oder x = 10
+x
+
+text_y <- "Hello"
+text_z <- "WORLD"
+
+# Print: um ein Objekt zu "drucken"
+print(text_y)
+
+text_y_z <- c(text_y, text_z)
+text_y_z
+```
+
+Der "Pipe-Operator" `%>%` aus dem `tidyverse`-Package wird verwendet, um eine Funktion an einem Objekt anzuwenden, ohne das Objekt in der Funktion stehen zu haben. Obwohl das nichts am Output verändert, nutzen wir ihn, um eine Struktur im Code zu behalten. Dies ist speziell dann wichtig, wenn man mehrere Funktionen nacheinander anwendet.
+
+Wenn wir beispielsweise eine Tabelle von Autos `mtcars` 1. nach der Variable `mpg` (miles per gallon) filtern wollen, 2. bestimmte Variablen auswählen wollen und 3. die Autos dann nach der Leistung (`hp`) ordnen wollen, brauchen wir nicht zwangsläufig 3 Zeilen Code dafür. Beide Herangehensweisen kommen zum selben Ergebnis
+
+```{r}
+# 1. Normal
+cars_filtered <- filter(mtcars, mpg > 20)
+cars_selected <- select(cars_filtered, mpg, cyl, hp)
+cars_final <- arrange(cars_selected, desc(hp))
+
+# 2. Mit Pipe %>%
+cars_final <- mtcars %>% filter(, mpg > 20) %>% select(, mpg, cyl, hp) %>% arrange(, desc(hp))
+
+# Die ersten 3 Reihen anzeigen
+head(cars_final, 3)
+```
+
+### Mathematische Operatoren
+
+Man kann einfache Berechnungen mit Zahlen oder Vektoren durchführen. Mit eckigen Klammern kann man Positionen in einem Vektor auswählen / einsehen.
+
+```{r}
+x^2
+
+# Vector erstellen
+vec_1 <- c(5, 10, 15)
+
+vec_1
+
+vec_1[1]
+vec_1[2]
+vec_1[3]
+
+vec_1 * 2
+```
+
+| Operation      | Zeichen |
+|----------------|---------|
+| Addition       | \+      |
+| Multiplikation | \*      |
+| Division       | /       |
+| Potenz         | \^      |
+
+### Files einlesen
+
+Um ein File einzulesen, müssen wir den Pfad des Files angeben. Befinden sich das Skript und File im selben Ordner, genügt für das csv-File "`data_1.csv`" der Pfad `".//data_1.csv"`. Um den Pfad zum File nicht händisch schreiben zu müssen, eignet es sich, mit einem Rechtsklick und "Pfad kopieren" den Link zu kopieren. Bei Problemen kann man im Fenster "Environment" (normalerweise rechts oben) auf "Import Dataset" gehen und ein File manuell einlesen.
+
+```{r file einlesen, message=FALSE}
+# CSV-Datei einlesen
+df <- read_csv(".//data_1.csv")
+```
+
+Um SPSS Files mit dem Typ `.sav` einzulesen, kann man folgende Funktion aus dem `haven`-Package verwenden:
+
+```{r SPSS files einlesen, message=FALSE}
+# SAV-Datei einlesen
+library(haven) # Falls Package noch nicht geladen wurde
+df_2 <- read_sav(".//data_2.sav")
+```
+
+### Überblick verschaffen
+
+Um sich einen Überblick über ein Datenfile zu verschaffen, eignen sich die folgenden Funktionen. Hinweis: `$` wird verwendet, um eine Spalte auszuwählen.
+
+```{r}
+# Ersten fünf Zeilen
+head(df, 5)
+
+colnames(df)
+
+summary(df$IQ)
+
+table(df$bedingung)
+```
+
+## Variablen Transformation
+
+### Variablen umbennen / umkodieren
+
+```{r variable transformation}
+# Variable umbenennen nach dem Schema: "neu" = alt
+df <- df %>% rename("WMS4_delayed_recall" = wmsva14)
+
+# Variable transformieren: zu einem Faktor, d.h. Nominalskalenniveau
+df$Bildungsstand <- df$Bildungsstand %>% as_factor()
+
+# Keine Angabe in Variable "Rauchen" wird zu NA
+df$Rauchen[df$Rauchen == "Keine Angabe"] <- NA
+```
+
+Oft wollen wir nominalskalierte Variablen zu Dummy-Variablen umkodieren. Beispielsweise wollen wir die Zugehörigkeit zur Kontroll- oder Experimentalbedingung numerisch zu 1 und 0 kodieren. Die Dummy-Variable erhält das Label `experimentalgruppe` mit den Ausprägungen 1 (ja $\rightarrow$ gehört zur Experimentalgruppe) und 0 (nein $\rightarrow$ gehört nicht zur Experimentalgruppe). Am besten wählt man ein informatives Label, also eines, welches den Namen der Referenzgruppe beinhaltet. Wenn wir die Variable nur `gruppe` nennen würden, wäre es nicht klar, welcher Wert zu welcher Gruppe gehört.
+
+```{r}
+# Rekodieren zu Dummy Variable
+df <- df %>%
+  mutate(experimentalgruppe = case_when(
+    bedingung == "Experimental" ~ 1,
+    bedingung == "Kontroll" ~ 0,
+    TRUE ~ NA_real_  # NA für fehlende Werte
+  ))
+```
+
+### z-Standardisierung & Zentrierung
+
+`mutate()` wird häufig verwendet, um Variablen zu transformieren. Um eine z-standardisierte Variable (hier: `BDI_z`) aus der herkömmlichen Variable (hier: `BDI`) zu erstellen, subtrahieren wir den Wert vom Mittelwert ("zentrieren") und teilen ihn durch die Standardabweichung ($z_i = \frac{x_i - \bar x}{s}$) \[\^Footnote\]. Alternativ können wir auch die Funktion `scale()` verwenden.
+
+```{r}
+df <- df %>% mutate(BDI_z2 = ((BDI - mean(BDI)) / sd(BDI)))
+```
+
+In der Regression kann es sinnvoll sein, Werte zu zentrieren, um die Ergebnisse besser interpretieren zu können. Zentrieren bedeutet, wir verschieben die Punkte im Koordinatensystem. Das wird typischerweise am Mittelwert duchgeführt ($x_{c,i}=x_i - \bar x$).
+
+```{r}
+df$BDI_c <- df$BDI - mean(df$BDI)
+```
+
+## Wide Format vs. Long Format
+
+Das wide und long Format sind die häufigsten Strukturen von Datensätzen. Am besten erkennt man sie an den folgenden Kennzeichen: 1. Im **wide Format** hat jede Person **eine Zeile** 2. Im **long Format** hat jede Person **mehrere Zeilen**
+
+Andere Statisitkprogramme wie SPSS verwenden oft das wide Format. Im Folgenden lesen wir einen Datensatz ein. Dieser enthält die well-being Werte von Personen mit oder ohne Therapie zu drei Zeitpunkten. Der Datensatz ist im wide Format. Wir haben eine Zeile pro Person und drei Spalten für den Zeitpunkt.
+
+```{r}
+df_3 <- read_csv('data_3.csv')
+head(df_3)
+```
+
+Wir konvertieren ihn beispielhaft ins long Format, wo eine Person anschließend eine Zeile pro Zeitpunkt, also insgesamt drei hat. Wir wollen die Werte aus den drei Spalten in einer Spalte vereinen (`values_to = "wellbeing"`). Dafür wählen wir die Spalten aus, welche die Werte enthalten (`cols = c()`). Zusätzlich erstellen wir eine neue Spalte, welche den Zeitpunkt kodiert (`names_to = "time"`).
+
+```{r}
+# Daten ins long-Format bringen: neue Spalte "time" mit Zeitpunkt sowie "wellbeing" mit Zellenwerten der alten Spalten
+colnames(df_3) <- as.character(colnames(df_3))
+
+df_3_long <- pivot_longer(data = df_3, cols = c("wellbeing_t0", "wellbeing_t1", "wellbeing_t2"), names_to = "time", values_to = "wellbeing")
+
+head(df_3_long)
+```
+
+Wenn wir die Daten nun zurück ins wide Format bringen wollen, geben wir die Spalte an, welche die unterschiedlichen Zeitpunkte kodiert (`names_from = time`). Zudem müssen wir die Spalte angeben, welche jene Werte enthält, die wir jetzt wieder auf drei Spalten aufteilen wollen (`values_from = "wellbeing"`). Wir können zusätzlich angeben, wie zusammen gehörende Werte identifiziert werden sollen (`id_cols = "participant_id"`). Wir sehen, dass diese Operation uns den Datensatz im ursprünglichen Zustand zurück gibt.
+
+```{r}
+df_3_wide <- pivot_wider(data = df_3_long, names_from = "time", values_from = "wellbeing", id_cols = "participant_id")
+
+head(df_3_wide)
+```
+
+# Deskriptive Statistik
+
+Wir können ganz einfach den Mittelwert und die Standardabweichung von einer Spalte berechnen.
+
+```{r}
+mean(df$Gewissenhaftigkeit)
+sd(df$Gewissenhaftigkeit)
+```
+
+Um uns deskr. Statistiken pro Gruppe ausgeben zu lassen, müssen wir `group_by()` verwenden.
+
+```{r}
+descriptives <- df %>% 
+  group_by(bedingung) %>%
+  summarize(
+    M = mean(Gewissenhaftigkeit),
+    SD = sd(Gewissenhaftigkeit),
+    n = n(),
+  )
+
+descriptives
+```
+
+Zudem bietet das `psych()`-Package eine praktische Funktion:
+
+```{r}
+library(psych)
+describe(df$Extraversion)
+```
+
+
+# Statistische Verfahren
+
+::: callout-important
+#### Die meisten Funktionen statistischer Verfahren sind folgendermaßen aufgebaut:
+
+1.  `verfahren(Abhängige_Variable ~ Unabhängige_Variable, data = Datensatz)`.
+
+2.  `verfahren(Variable_A, Variable_B)`.
+:::
+
+# t-Test
+
+### t-Test über einen Mittelwert:
+
+$H_0:$ Der IQ beträgt in der Population im Durchschnitt einen Wert von 100.
+
+```{r}
+t.test(df$IQ, mu = 100)
+```
+
+### t-Test über zwei unabhängige Stichproben:
+
+$H_0:$ Unterscheiden sich die Kontroll- und Experimentalgrupp in der Gewissenhaftigkeit.
+
+```{r}
+t.test(Gewissenhaftigkeit ~ bedingung, data = df)
+```
+
+### t-Test über zwei abhängige Stichproben:
+
+$H_0:$ Das well-being hat sich durch die Intervention nicht verändert.
+
+```{r}
+t.test(df_3$wellbeing_t0 , df_3$wellbeing_t1, paired = TRUE)
+```
+
+### Voraussetzungen t-Test
+
+:::callout-tip
+## Statistische Voraussetzungen
+Beim Testen der Voraussetzungen können wir entweder deskriptivstatistische oder inferenzstatistische Verfahren verwenden. Deskriptivstatistisch kann man die Verfahren mit Plots untersuchen (z.B. Residual Plots, QQ Plots). Inferenzstatistiche Verfahren werden mit Tests durchgeführt (z.B. Kolmogorov-Smirnov Test). Beide Herangehensweisen haben ihre Probleme: 1. Deskriptivstatistische Verfahren sind subjektiv 2. Inferenzstatistische Verfahren haben eine geringe Power in kleinen Stichproben, was dazu führt, dass sie Verletzungen nicht zeigen. In größeren Stichproben haben sie eine hohe Power und werden auch bei geringfügigen Verletzungen signifikant. Das ist ungünstig, da die Verletzungen vor allem in kleinen Stichproben relevant sind. In großen Stichproben und balancierten Designs sind Verfahren wie die ANOVA einigermaßen robust gegen einige der Verletzungen.
+
+Ich persönlich würde die deskriptivstatistischen Verfahren empfehlen. Im Zweifel kann man diese in Kombination mit inferenzstatistischen Verfahren verwenden. 
+
+#### Was tun bei Verletzungen?
+Verletzungen sollten immer transparent berichtet werden. Informiere dich darüber, wie sensibel das verwendete statistische Verfahren auf solche Verletzungen reagiert. Falls Korrekturen vorgenommen werden (z.B. robuste Tests, Transformationen), ist es sinnvoll, die Analyse mit und ohne Korrektur durchzuführen und beide Ergebnisse anzugeben. Ein robuster Effekt sollte sich unter beiden Bedingungen zeigen. Dies ist z.B. hilfreich, wenn unklar ist, ob Ausreißer das Ergebnis verzerren. Ergänzend können simulationsbasierte Verfahren wie Bootstrapping oder Randomization Tests eingesetzt werden. Diese reduzieren die Abhängigkeit von theoretischen Annahmen und können die Robustheit der Ergebnisse erhöhen. 
+:::
+
+#### Normalverteilung
+
+##### Histogram
+
+Mit einem Histogram pro Gruppe können wir die Annahme der Normalverteilung grob untersuchen.
+
+```{r label=fig-ggplothistttest}
+df_bedingung <- df %>% filter(!is.na(bedingung))
+
+ggplot(data = df_bedingung, mapping = aes(x = Gewissenhaftigkeit)) + 
+  geom_histogram(bins = 20, color = "black", fill = "steelblue") +
+  facet_wrap(~bedingung) + # ein eigenes Histogram pro Gruppe
+  labs(title = "Histogram", y = "Häufigkeit")
+```
+
+##### QQ-Plot
+
+Die Normalverteilung können wir mit QQ-Plots testen. Im QQ-Plots wird die Verteilung der Residuen der Stichprobe (durch Punkte gekennzeichnet) mit der Normalverteilung (Strich) verglichen. Die Gerade kennzeichnet eine perfekte Normalverteilung. Je stärker die Punkte von der Linie abweichen, desto stärker weichen die Daten von der Normalverteilung ab.
+
+Zu Beginn können wir das Histogram und die 
+Das Package `Rempsyc` eine praktische Funktion für QQ-Plots.
+
+###### QQ-Plot für Gewissenhaftigkeit, für die Kontrol- und Experimentalbedingung
+```{r label=fig-remqqttest}
+nice_qq(df_bedingung, variable = "Gewissenhaftigkeit", group = "bedingung", title = NULL)
+```
+
+#### Varianzhomogenität
+
+Diese müssen wir im Fall vom t-Test über zwei unabhängige Stichproben testen. Hier können wir den Levene's Test verwenden. Dieser testet die $H_0$, dass die Varianzen der Gruppen homogen sind. Ein signifikanter Wert deutet darauf hin, dass die Varianzen heterogen sind, also eine Verletzung der Annahme der Homoskedastizität.
+
+```{r levene, warning=FALSE}
+leveneTest(Gewissenhaftigkeit ~ bedingung, data = df)
+```
+Allgemein ist der t-Test ziemlich robust gegenüber Verletzungen der Voraussetzungen.
+
+
+# Varianzanalyse (ANOVA)
+
+Klassischerweise wird für die ANOVA häufig die Funktion `aov()` verwendet. Im Folgenden werden wir jedoch das Package `afex` nutzen, da dies u.a. Vorteile bei unbalancierten Stichproben und bei Messwiederholung (Within-Subject) hat \[\^Footnote\]. Hier können wir die Funktion `aov_ez()` verwenden.
+
+Diese Funktion benötigt allerdings eine Participant-ID (`id =`). Falls diese nicht vorhanden ist, können wir sie einfach hinzufügen, wenn es eine Zeile pro Participant gibt (wide Format). Wir zählen von 1 bis zur Gesamtanzahl der AV-Werte (`df_wor$Wor`) und fügen diese als `participant` hinzu. Gibt es einen Within-Subject Factor und die Daten sind im long Format ist das etwas komplizierter: bei einer Messwiederholung mit $m$ Stufen bedeutet das $m$ Zeilen pro Participant. \[\^Footnote\].
+
+```{r, warning=FALSE}
+# Daten einlesen
+df_wor <- read_delim("Worry143.csv", delim = ";")
+
+# ID Spalte pro Participant hinzufügen
+df_wor$participant <- c(1:length(df_wor$Wor)) 
+```
+
+### One Between
+
+Hinweis: `"es = pes"` steht für das partielle Eta-Quadrat ($\hat \eta_{par}^2$). Wir können uns auch das generalisierte Eta-Quadrat ($\hat \eta^2$) ausgeben (`es = "ges"`).
+
+```{r}
+library(afex)
+anova_result <- aov_ez(id = "participant", dv = "Wor", between = "S_E", data = df_wor, anova_table = list(es = "pes"))
+
+anova_result
+
+# Alternativ mit aov()
+#anova_result <- aov(Wor ~ S_E, data = df_wor)
+```
+
+### One Within
+
+Für die ANOVA mit Messwiederholung (Within-Subject Factor) können wir die Funktion `aov_ez()` aus dem `afex()`-Package verwenden. Diese hat den Vorteil, dass sie bei Verletzung der Spherizität korrigierte Ergebnisse angibt. Im Folgenden Output wird darauf hingewiesen, dass nach einer Verletzung der Spherizität eine Greenhouse-Geisser-Korrektur angewandt wurde. Das können wir auch daran erkennen, dass die Freiheitsgrade keine ganzen Zahlen sind ($F_{1.63, 193.62}$).
+
+```{r}
+anova_result <- aov_ez(id = "participant_id", dv = "wellbeing", within = "time", anova_table = list(es = "pes"), data = df_3_long)
+anova_result
+```
+
+```{r fig-boxplottanova}
+ggplot(df_3_long, aes(x = time, y = wellbeing, fill = time)) +
+  geom_boxplot(alpha = 0.6, outlier.color = "red", outlier.shape = 16) +
+  labs(title = "Well-being über Zeit",
+       x = "Zeitpunkt",
+       y = "Well-being Score") +
+  theme_minimal() +
+  theme(legend.position = "none")  # Remove legend
+```
+
+### Two Between
+
+*Hier gerne Datensatz ändern*
+
+```{r anova results, message=FALSE}
+df_wor <- df_wor %>% rename(gender = "Geslacht")
+df_wor$gender <- df_wor$gender %>% as_factor()
+df_wor$S_E <- df_wor$S_E %>% as_factor()
+```
+
+```{r}
+library(afex)
+anova_result <- aov_ez(id = "participant", dv = "Wor", between = c("gender", "S_E"), data = df_wor, anova_table = list(es = "pes"))
+anova_result
+
+# Alternativ mit aov()
+#anova_result <- aov(Wor ~ gender * S_E, data = df_wor)
+```
+
+#### Interaction Plot
+
+Mit `interaction.plot(UV_1, UV_2, AV)` können wir einen Interaktions-Plot erstellen
+
+```{r label=fig-interactionanova}
+interaction.plot(df_wor$S_E, df_wor$gender, df_wor$Wor, col = c("blue", "red"), lty = 1, lwd = 2, legend = TRUE,
+                 xlab = "UV S_E", ylab = "AV Wor", trace.label = "Gender")
+```
+
+### One Between, One Within (Mixed)
+
+Für die ANOVA mit Messwiederholung (Within-Subject Factor) können wir die Funktion `aov_ez()` verwenden. Diese hat den Vorteil, dass sie bei Verletzung der Spherizität automatisch korrigierte Ergebnisse angibt.
+
+
+```{r}
+markovits_beghin_2023 <- read_sav("BaseHeuristic.sav")
+
+# Transformation der Spalten zu Faktoren
+markovits_beghin_2023$Speed <- markovits_beghin_2023$Speed %>% as_factor()
+markovits_beghin_2023$Condition <- markovits_beghin_2023$Condition %>% as_factor()
+
+# Mixed anova model
+anova_mixed <- aov_ez(id = "ID", dv = "Response", within = "Speed", between = "Condition", data = markovits_beghin_2023, anova_table = list(es = "pes"), include_aov = TRUE)
+
+summary(anova_mixed)
+```
+
+## Effektgrößen
+
+Das partielle Eta-Quadrat $\hat \eta_{par}^2$ können wir aus den Ergebnissen der gerechneten Varianzanalyse berechnen. Hierfür können wir die `eta_squared()`-Funktion aus dem Package `effectsize` verwenden. Diese berechnet zusätzlich ein 95%-iges Konfidenzintervall. Mit dem Parameter `partial = TRUE`, bzw. `generalized = TRUE` können wir uns speziell für das partielle oder generalisierte Eta-Quadrat entscheiden.
+
+```{r eta_sq}
+effectsize::eta_squared(anova_result)
+```
+
+Das Omega-Quadrat $\hat \omega^2_{par}$ ist eine korrigierte Alternative zum Eta-Quadrat. Das partielle Eta-Quadrat ist positiv gebiased: unsystematische Zufallsvarianz wird zum Teil für systematische Effektvarianz gehalten. Daher wird das pertielle Omega-Quadrat korrigiert und fällt idR. kleiner aus als das partielle Eta-Quadrat. Wenn $\hat \omega^2_{par}$ negativ ausfällt, ist es auf 0.00 zu setzen.
+
+```{r}
+omega_squared(anova_result)
+```
+
+## Geplante Kontraste / Post-Hoc Tests
+
+### Geplante Kontraste
+
+Anders als bei post-hoc Tests werden geplante Kontraste formuliert, bevor wir unsere Analysen rechnen bzw. die Daten begutachten. Das bedeutet, wir formulieren eine Hypothese und testen sie dann mit unseren Daten. Solche Erkenntnisse sind deutlich schwerer zu gewichten als Erkenntnisse, auf die wir bei Analyse der Daten explorativ stoßen. Geplante Kontraste sind im Prinzip wie ein t-Test. Wenn wir mehr als zwei Gruppen vergleicht, kann man jedoch die unbekannte Populationsvarianz besser schätzen. Daher verfügen geplante Kontraste über eine höhere Power als wenn man alternativ nur einzelne t-Tests rechnen würde.
+
+Wir untersuchen die a-priori formulierte Hypothese, dass sich Gruppe 1 und Gruppe 2 unterscheiden (unabhängig von Gruppe 3). Hierfür müssen wir die Mittelwerte mit Kontrastgewichten versehen. Wir gewichten den Mittelwert von Gruppe 1 mit +1, von Gruppe 2 mit -1. Nachdem uns Gruppe 3 hier nicht interessiert, wird deren Mittelwert mit 0 gewichtet. Wir können mit `contrast()` die Kontraste eines Faktors manuell überschreiben.
+
+$H_0: 1*\mu_1 - 1*\mu_2 + 0 * \mu_3 = 0$
+
+```{r}
+# One Between ANOVA
+anova_result <- aov_ez(id = "participant", dv = "Wor", between = "S_E", data = df_wor, anova_table = list(es = "pes"))
+
+em <- emmeans(anova_result, ~ S_E)
+
+# Kontrast festlegen (z.B.S_E1 - S_E2)
+contrast_custom <- contrast(em, method = list("S_E1_vs_S_E2" = c(1, -1, 0)))
+summary(contrast_custom)
+```
+
+```{r}
+set.seed(100)
+nice_contrasts(response = "Wor", group = "S_E", data = df_wor, effect.type = "cohens.d", bootstraps = 1000)
+```
+
+#### Komplexe Kontraste
+
+In komplexen Kontrasten vergleichen wir anders als bei paarweisen Vergleichen nicht eine Bedingung mir einer anderen, sondern beispielsweise eine Bedingung mit zwei anderen Bedingungen. Das könnte beispielsweise von Interesse sein wenn wir die Gruppen "Keine Therapie", "Kognitiv-Behaviorale Therapie" und "Gestalt Therapie" haben. Wir wollen untersuchen, ob sich Personen, die nicht in Therapie sind (Gruppe 1) von Personen unterscheiden, die in Therapie sind (Gruppen 2 & 3). Wir gewichten den Mittelwert von Gruppe 1 mit 1 und jene von Gruppen 2 & 3 mit jeweils -0.5. Auf beiden Seiten müssen die Werte gleich groß sein (1 vs. -(0.5+0.5)). Der Wert von 0.5 statt 1 sorgt dafür, dass die Mittelwerte von Gruppen 2 & 3 gemittelt werden (2 * 0.5 = 1). Das negative Vorzeichen bestimmt, welche Gruppe auf welcher Seite des Kontrasts steht. 
+
+$H_0: 1*\mu_1 - 0.5*\mu_2 + 0.5 * \mu_3 = 0$
+
+
+```{r}
+df_wor$S_E <- df_wor$S_E %>% as_factor()
+
+contrast_matrix <- cbind(
+  "cond1_vs_cond_2_and_3" = c(1, -0.5, -0.5)
+)
+
+# Die Kontraste für die UV werden überschrieben
+contrasts(df_wor$S_E) <- contrast_matrix
+
+contrasts(df_wor$S_E)
+
+anova_bet <- aov(Wor ~ S_E, data = df_wor)
+summary.lm(anova_bet)
+```
+
+
+#### Bonfferoni
+
+In der Bonfferoni-Korrektur wird gegen Multiples Testen korrigiert, indem jeder p-Wert eines Vergleichs mit der Anzahl der Vergleiche mulitpliziert wird ($p_j \leq \frac{\alpha'}{N}$), oder alternativ dass das Signifikanzniveau $\alpha$ durch die Anzahl der Vergleiche geteilt wird ($N * p_j \leq \alpha'$). Je mehr Vergleiche wir durchführen, desto geringer ist also die Wahrscheinlichkeit, dass ein einzelner Vergleich signifikant wird. Daher ist es sinnvoll, sich die Vergleiche genau zu überlegen und nicht alle möglichen Vergleiche zu rechnen.
+
+Dadurch ist dieses Kriterium konservativer als beispielsweise die Tukey-Kramer Korrektur. Die einzelnen Hypothesen müssen allerdings nicht unabhängig sein.
+
+Unter `$contrasts` werden die Vergleiche der einzlnen Stufen angegeben. Unter `$emmeans` bekommen wir die geschätzten Mittelwerte für jede Stufe.
+
+```{r}
+# Bonfferoni
+anova_result <- aov_ez(id = "participant", dv = "Wor", between = c("gender", "S_E"), data = df_wor, anova_table = list(es = "pes"))
+
+posthoc_bonferroni <- emmeans(anova_result, pairwise ~ S_E * gender, adjust = "bonferroni")
+posthoc_bonferroni
+```
+
+### Post-Hoc Tests
+
+##### Tukey HSD
+
+Die Tukey-Kramer Korrektur eignet sich für paarweise Vergleiche von Faktorstufen, speziell im Fall von Post-Hoc Vergleichen. Die Power des Verfahrens ist höher, als bei der Bonfferoni-Korrektur und dem Scheffe-Test. Die einzelnen Hypothesen müssen dafür nicht unabhängig sein.
+
+Im Folgenden testen wir den Interaktionseffekt aus der zweifaktoriellen ANOVA (2 Between). Gerade die Einzelvergleiche des Interaktionseffekts sind allerdings etwas schwierig zu lesen. Hier sind Zahlen für die jeweilige Stufe hinten angefügt. `gender0 S_E1 - gender1 S_E1` steht z.B. für $\bar x_{gender = 0, S\_E = 1} - \bar x_{gender = 1, S\_E = 1}$.
+
+```{r}
+# Tukey’s HSD Post-Hoc Test
+posthoc_tukey <- emmeans(anova_result, pairwise ~ gender * S_E, adjust = "tukey")
+posthoc_tukey
+```
+
+Bei Bedarf können wir uns auch Plots zu den Konfidenzintervallen ausgeben lassen. Umfasst das Konfidenzintervall 0.0 nicht, ist das 95%-Konfidenzintervall für den Vergleich nur im positiven oder negativen Bereich (z.B. `0:2-0:1`). Das ein anderer Ausdruck für $p > 0.05$. Bei `gender:S_E` steht der Vergleich `1:1-0:1` für $\bar x_{gender = 1, S\_E = 1} - \bar x_{gender = 0, S\_E = 1}$.
+
+Hinweis: Im folgenden Beispiel verwenden wir nicht die `aov_ez()` Funktion mit `emmeans(..., adjust = "tukey")` sondern die `aov()`-Funktion mit `TukeyHSD()`. Die genannten Funktionen stammen aus unterschiedlichen Packages und sind zum Teil nicht kompatibel. \[\^Footnotes\]
+
+```{r label=fig-confidenceintervalplots}
+anova_result <- aov(Wor ~ gender * S_E, data = df_wor)
+
+posthoc_tukey_2 <- TukeyHSD(anova_result)
+plot(posthoc_tukey_2, las = 1)
+```
+##### Scheffe Test
+
+```{r}
+# Scheffe Post-Hoc Test
+posthoc_scheffe <- emmeans(anova_result, pairwise ~ gender * S_E, adjust = "scheffe")
+posthoc_scheffe
+```
+
+
+## Voraussetzungen ANOVA
+
+:::callout-tip
+## Statistische Voraussetzungen
+Beim Testen der Voraussetzungen können wir entweder deskriptivstatistische oder inferenzstatistische Verfahren verwenden. Deskriptivstatistisch kann man die Verfahren mit Plots untersuchen (z.B. Residual Plots, QQ Plots). Inferenzstatistiche Verfahren werden mit Tests durchgeführt (z.B. Kolmogorov-Smirnov Test). Beide Herangehensweisen haben ihre Probleme: 1. Deskriptivstatistische Verfahren sind subjektiv 2. Inferenzstatistische Verfahren haben eine geringe Power in kleinen Stichproben, was dazu führt, dass sie Verletzungen nicht zeigen. In größeren Stichproben haben sie eine hohe Power und werden auch bei geringfügigen Verletzungen signifikant. Das ist ungünstig, da die Verletzungen vor allem in kleinen Stichproben relevant sind. In großen Stichproben und balancierten Designs sind Verfahren wie die ANOVA einigermaßen robust gegen einige der Verletzungen.
+
+Ich persönlich würde die deskriptivstatistischen Verfahren empfehlen. Im Zweifel kann man diese in Kombination mit inferenzstatistischen Verfahren verwenden. 
+
+#### Was tun bei Verletzungen?
+Verletzungen sollten immer transparent berichtet werden. Informiere dich darüber, wie sensibel das verwendete statistische Verfahren auf solche Verletzungen reagiert. Falls Korrekturen vorgenommen werden (z.B. robuste Tests, Transformationen), ist es sinnvoll, die Analyse mit und ohne Korrektur durchzuführen und beide Ergebnisse anzugeben. Ein robuster Effekt sollte sich unter beiden Bedingungen zeigen. Dies ist z.B. hilfreich, wenn unklar ist, ob Ausreißer das Ergebnis verzerren. Ergänzend können simulationsbasierte Verfahren wie Bootstrapping oder Randomization Tests eingesetzt werden. Diese reduzieren die Abhängigkeit von theoretischen Annahmen und können die Robustheit der Ergebnisse erhöhen. 
+:::
+
+### Homoskedastizität (Varianzhomogenität)
+
+Homoskedastizität ist die eine zentrale Annahme in der ANOVA: die Varianzen in den Gruppen sind gleich, bzw. ähnlich groß ("homogen"). Eine Verletzung der Homoskedastizität ist schwerwiegender wenn die Gruppen unterschiedlich groß sind.
+
+#### Residual Plot
+
+Um die Homoskedastizität zu überprüfen, erstellen wir einen Residual Plot. Die Residuen bezeichnen Abweichungen eines beobachteten Wertes vom vorhergesagten Wert. In der ANOVA ist das die Abweichung eines Wert $y_{ij}$ vom jeweiligen Gruppenmittelwert $\hat y_j$. Daher: $e_{ij} = y_{ij} - \hat y_j$
+
+Wir wollen, dass die Varianz in allen Gruppen ähnlich groß ist. Daher schauen wir uns an, ob die Resiuden ähnlich groß sind. Zudem zeigt der Residual Plot potentielle Ausreißer.
+
+```{r label=fig-residualplotanova}
+# Extract residuals and fitted values
+residuals <- residuals(anova_result)
+fitted_values <- fitted(anova_result)
+
+# Plot residuals against fitted values
+plot(jitter(fitted_values), residuals, 
+     xlab = "Fitted Values", 
+     ylab = "Residuals", 
+     main = "Residuals of Sub-Groups")
+  abline(h = 0, col = "red") 
+```
+
+Siehe @fig-residuenplotregression für einen Residual Plot in der Regression.
+
+#### Levene's Test
+
+Alternativ können wir den Levene's Test verwenden. Dieser testet die $H_0$, dass die Varianzen der Gruppen homogen sind. Ein signifikanter Wert deutet darauf hin, dass die Varianzen heterogen sind, also eine Verletzung der Annahme der Homoskedastizität.
+
+```{r}
+leveneTest(Wor ~ gender*S_E, data = df_wor)
+```
+
+### Spherizität
+
+Spherizität ist eine Erweiterung der Homoskedastizität bei Messwiederholungs-Desgins (mit Within-Subject Factor). Die Spherizität beschreibt, dass die Varianz der Differenzen zwischen den Messzeitpunkten konstant ist. Ein einfaches Beispiel wäre der IQ gemessen im Alter von 17, 18 und 30 Jahren. Die Messungen im Alter von 17 und 18 Jahren würden sich deutlich weniger unterscheiden (=geringere Varianz der Differenzen) als beispielsweise bei 18 und 30 Jahren.
+
+$H_0 = \sigma^2_{y_1 - y_2} = \sigma^2_{y_1 - y_3} = \sigma^2_{y_2 - y_3}$
+
+$H_1 = \sigma^2_{y_1 - y_2} \not = \sigma^2_{y_1 - y_3} \not = \sigma^2_{y_2 - y_3}$
+
+Wenn wir uns die `summary()` einer ANOVA mit `aov_ez()` ausgeben, sehen wir zu erst die nicht-korrigierten Ergebnisse. Darunter wird uns bei `Mauchly Tests for Sphericity` eine Verletzung der Spherizität angezeigt ($p<.05$). Es wird jeweils ein Greenhouse-Geisser und Huynh-Feldt Epsilon zur Korrektur angegeben. Wenn wir uns einfach nur das `aov_ez()`-ANOVA Objekt ausgeben lassen, sind die Ergebnisse bei Verletzung der Spherizität automatisch korrigiert: Die Freiheitsgrade des F-Tests sind mit dem Greenhouse-Geisser Epsilon multipliziert.
+
+```{r}
+anova_result <- aov_ez(id = "participant_id", dv = "wellbeing", within = "time", anova_table = list(es = "pes"), data = df_3_long)
+
+summary(anova_result)
+```
+
+```{r}
+anova_result
+```
+
+### Normalverteilung
+
+::: callout-tip
+Die ANOVA ist einigermaßen robust gegen eine Verletzung der Normalverteilung, es sei denn die Normalverteilung ist in der Population sehr schief oder Gruppengrößen sind unterschiedlich groß. Hierbei ist es relevant, dass die Messwerte, bzw. Residuen, in den Gruppen normalverteilt sind, nicht die Daten allgemein (Stellen Sie sich bei drei Gruppen z.B. drei Normalverteilungen vor, die zum Teil überlappen. Die Daten wären nicht normalverteilt, in den Gruppen aber schon.)
+:::
+
+#### Histogram
+
+Mit einem Histogram pro Gruppe können wir die Annahme der Normalverteilung grob untersuchen. Hierfür können wir die Residuen oder die normalen Daten pro Gruppe verwenden.
+
+```{r label=fig-ggplothist}
+ggplot(data = df_wor, mapping = aes(x = Wor)) + 
+  geom_histogram(bins = 20, color = "black", fill = "steelblue") +
+  facet_wrap(~S_E) + # ein eigenes Histogram pro Gruppe
+  labs(title = "Histogram", y = "Häufigkeit")
+```
+
+#### QQ-Plot
+
+Die Normalverteilung können wir mit QQ-Plots testen. Im QQ-Plots wird die Verteilung der Residuen der Stichprobe (durch Punkte gekennzeichnet) mit der Normalverteilung (Strich) verglichen. Die Gerade kennzeichnet eine perfekte Normalverteilung. Je stärker die Punkte von der Linie abweichen, desto stärker weichen die Daten von der Normalverteilung ab.
+
+```{r label=fig-qqplotanova}
+# Wir haben die Residuen zuvor extrahiert: residuals <- residuals(anova_result)
+df_wor$residual <- residuals
+
+qqnorm(df_wor$residual, main = "QQ-Plot")
+qqline(df_wor$residual)
+```
+
+Das Package `Rempsyc` eine praktische Funktion für QQ-Plots. Hier können wir (bei Bedarf) auch einstellen, dass wir die Verteilungen der einzelnen Gruppen untersuchen wollen.
+
+```{r label=fig-remqq}
+nice_qq(df_wor, variable = "residual", title = NULL)
+```
+
+#### Shapiro Wilk Test
+
+Als inferenzstatistischen Test können wir die Normalverteilung der Residuen mit dem Shapiro Wilk Test testen. Die Abweichungen in den Gruppen (=Residuen) müssen normalverteilt sein, nicht die Variable allgemein.
+
+```{r shapiro}
+shapiro.test(residuals)
+```
+
+### Unabhängigkeit der Residuen
+
+Diese Voraussetzung ist eher theoretischer Natur und ist verletzt, wenn relevante Information nicht im statistischen Modell enthalten ist. Zum Beispiel könnten wir den Effekt unterschiedlicher Lernmethoden (konventionell vs. interaktiv vs. digital gestützt) an 15 verschiedenen Schulen erheben. Die Leistungen der SchülerInnen sind nicht nur von den Lernmethoden sondern auch stark von der Schule abhängig. Ein solcher Clustereffekt wäre für eine normale ANOVA problematisch. Wir müssten komplexere Verfahren verwenden, um dies zu berücksichtigen. Wir überprüfen die Voraussetzung in erster Linie über das Forschungsdesign.
+
+### Ausreißer
+
+Ausreißer können das Ergebnis der ANOVA stark beeinflussen. Wir können den Residual Plot (@fig-residualplotanova) oder Box-Plot (@fig-boxplottanova) nutzen, um Ausreißer zu identifizieren.
+
+::: callout-tip
+Das Ausschließen von Ausreißern ist ein kontroverses Thema. Im Zweifel lohnt es sich, zu untersuchen ob der Effekt auch ohne Ausreißer oder in einem rang-basierten Verfahren besteht. Zudem kann Bootstrapping verwendet werden, um die Robustheit der Ergebnisse zu bestärken.
+:::
+
+# Korrelation
+
+Mittels `cor()` können wir den Korrelationskoeffizienten berechnen. Im Parameter `use` können wir angeben, wie wir mit fehlenden Werten (`NA`) umgehen wollen.
+
+```{r}
+cor(df$Mathematiknote, df$Statistiknote, use = "complete.obs")
+```
+
+Mit `cor.test()` können wir auf Signifikanz testen. Zudem wird automatisch ein `95%`-Konfidenzintervall ausgegeben
+
+```{r}
+cor.test(df$Extraversion, df$Neurotizismus)
+
+cor_ex_neu <- cor.test(df$Extraversion, df$Neurotizismus, use = "complete.obs", method = "pearson")
+
+r_value <- cor_ex_neu$estimate  # Pearson-Korrelation (r)
+p_value <- cor_ex_neu$p.value    # p-value
+ci_lower <- cor_ex_neu$conf.int[1]  # Untere Grenze des 95% KI
+ci_upper <- cor_ex_neu$conf.int[2]  # Obere Grenze des 95% KI
+```
+
+#### Rangkorrelation
+
+Im Parameter `method` können wir ebenfalls die Spearman-Korrelation und Kendall's Tau auswählen, welche Rang-basiert sind.
+
+```{r}
+cor.test(df$Mathematiknote, df$Statistiknote, method = "spearman")
+cor.test(df$Mathematiknote, df$Statistiknote, method = "kendall")
+```
+
+#### Korrelationsmatrix
+
+Es gibt verschiedene Möglichkeiten, eine Korrelations-Matrix oder Scatterplot-Matrix erstellen zu lassen:
+
+1.  Die `cor()`-Funktion mit mehreren Spalten eines Dataframes.
+
+```{r}
+cor(df[, c("IQ", "Mathematiknote", "WMS4_delayed_recall")], method = "pearson", use = "pairwise.complete.obs")
+```
+
+2.  `ggpairs()` aus dem `GGally`-Package.
+
+Hier können wir uns eine Hälfte der Matrix als Scatterplot Matrix ausgeben lassen (unter `lower`). Die `method` gibt hier an, ob die Regressionslinie gerade sein soll (`method = "lm"`) oder eine "lokale", daher nicht-gerade Regressionslinie (`method = "loess"`). Letzteres ist sinnvoll, um die Voraussetzung der **Linearität** überprüfen will. Zusätzlich kann man sich den Standardfehler der Regressionslinie angeben lassen (`se = TRUE`).
+
+```{r label=fig-ggpairscorplot, message=FALSE, warning=FALSE}
+ggpairs(df, columns = c("IQ", "Mathematiknote", "WMS4_delayed_recall"),
+        lower = list(continuous = wrap("smooth", method = "loess", se = TRUE)),
+        upper = list(continuous = wrap("cor")
+        )
+)
+```
+
+3.  Das `psych()`-Package bietet eine ähnliche Funktion.
+
+```{r label=fig-psychcorplot}
+pairs.panels(df[, c("IQ", "Mathematiknote", "WMS4_delayed_recall")], ellipses = F)
+```
+
+# Regression
+
+### Einfache Lineare Regression
+
+Die Syntax der Einfachen Linearen Regression ist im selben Schema wie zuvor: `AV ~ UV`. Über Summary können wir uns wieder die Ergebnisse ausgeben lassen.
+
+Das unstandardisierte Regressionsgewicht von IQ ist unter `Estimate` zu finden. Daneben den zugehörigen Standardfehler, t-Wert und zugehörigen p-Wert. Das `Multiple R-squared` entspricht dem $R^2$, der gesamten durch das Modell aufgeklärten Varianz.
+
+```{r}
+model_simple_regression <- lm(WMS4_delayed_recall ~ IQ, data = df)
+
+summary(model_simple_regression)
+```
+
+Die standardisierten Regressionskoeffizienten, also der $\beta$-Koeffizient, werden leider nicht automatisch mit ausgegeben. Mit dem Package `lm.beta` können wir diese bekommen. In der einfachen linearen Regression sind diese identisch mit der Pearson-Korrelation. Die ist in der MLR nicht der Fall, es sei denn die Prädiktoren haben keine gemeinsame Varianz.
+
+```{r}
+lm.beta(model_simple_regression)
+cor(df$IQ, df$WMS4_delayed_recall)
+```
+Wir können uns auch die Übersicht über das gesamte Model inkl. der standardisierten Regressionskoeffizienten unter `Standardized` ausgeben lassen:
+
+```{r}
+summary(lm.beta(model_simple_regression))
+```
+
+Das Package `rempsyc` bietet nützliche Funktionen, um Ergebnis-Tabellen zu erstellen. Diese sind zum Großteil APA-konform. Ich rate jedoch, das Format bei Verwendung noch einmal zu überprüfen. 
+
+```{r}
+model_slr_results <- nice_lm(model_simple_regression)
+model_slr_results[2] <- "IQ" # IQ als Prädiktor
+model_slr_results <- 
+model_slr_results
+```
+
+```{r label=fig-niceslr}
+model_slr_results <- nice_table(model_slr_results, 
+                                title = c("Tabelle 1", "Zusammenhang von Gedächtnisfähigkeit (verzögerte Wiedergabe) und Intelligenz"),
+                                note = c(paste("Diese Tablle ist als Beispiel gedacht. Alle Zusammenhänge sind frei erfunden.", sep = " "), "* p < .05, ** p < .01, *** p < .001"))
+
+#Um Tabelle als Word-Datei zu speichern
+#flextable::save_as_docx(model_slr_results, path = "model_slr_results.docx")
+
+model_slr_results
+```
+
+### Multiple Lineare Regression
+
+$$Y_i = \alpha + \beta_1 \cdot x_{i1} + \beta_2 \cdot x_{i2} + \beta_3 (x_{i1} \cdot x_{i2}) + \epsilon_i$$ 
+
+Die Syntax für die MLR bleibt gleich: wir fügen weiter Prädiktoren (UVs) mit `+` ein, sowie eine Interaktion durch `*`.
+
+```{r}
+model_mlr <- lm(WMS4_delayed_recall ~ Mathematiknote + IQ + Mathematiknote * IQ, data = df)
+model_mlr_stan <- summary(lm.beta(model_mlr)) # für standardisiertes Regressionsgewicht
+
+model_mlr_stan
+```
+
+```{r}
+model_mlr_table <- tidy(model_mlr_stan)
+
+colnames(model_mlr_table) <- c("Variable", "b", "β", "SE", "t", "p") # "\u03B2" kann statt β verwendet werden
+
+model_mlr_table
+```
+
+```{r label=fig-nicemlr}
+nice_table(model_mlr_table, 
+           title = c("Tabelle 2", "Zusammenhang von Gedächtnisfähigkeit (verzögerte Wiedergabe), Mathematik und Intelligenz"),
+           note = c(
+             paste("Diese Tablle ist als Beispiel gedacht. Alle Zusammenhänge sind frei erfunden.", sep = " "), "* p < .05, ** p < .01, *** p < .001"))
+```
+
+Beim Vorliegen von diskreten Prädiktoren verweise ich auf das Kaptiel "MLR mit diskreten Prädiktor".
+
+## Voraussetzungen Regression
+
+Die folgende Abbildung zeit die Relevanz der Prüfung der Voraussetzungen in der Regression. Jeder der vier Datensätze verfügt über die selbe Regressionsgerade und $R^2 = 0.67$. Links oben ($y_1$) ist keine der Voraussetzungen verletzt. Hier sind jedoch nicht alle Voraussetzungen abgebildet.
+
+![](images/Anscombe's_quartet_3.svg){#fig-ascombe}
+
+[Ascombe's Quartett auf Wikipedia](https://de.wikipedia.org/wiki/Anscombe-Quartett#/media/Datei:Anscombe's_quartet_3.svg)
+
+:::callout-tip
+## Statistische Voraussetzungen
+Beim Testen der Voraussetzungen können wir entweder deskriptivstatistische oder inferenzstatistische Verfahren verwenden. Deskriptivstatistisch kann man die Verfahren mit Plots untersuchen (z.B. Residual Plots, QQ Plots). Inferenzstatistiche Verfahren werden mit Tests durchgeführt (z.B. Kolmogorov-Smirnov Test). Beide Herangehensweisen haben ihre Probleme: 1. Deskriptivstatistische Verfahren sind subjektiv 2. Inferenzstatistische Verfahren haben eine geringe Power in kleinen Stichproben, was dazu führt, dass sie Verletzungen nicht zeigen. In größeren Stichproben haben sie eine hohe Power und werden auch bei geringfügigen Verletzungen signifikant. Das ist ungünstig, da die Verletzungen vor allem in kleinen Stichproben relevant sind. In großen Stichproben und balancierten Designs sind Verfahren wie die ANOVA einigermaßen robust gegen einige der Verletzungen.
+
+Ich persönlich würde die deskriptivstatistischen Verfahren empfehlen. Im Zweifel kann man diese in Kombination mit inferenzstatistischen Verfahren verwenden. 
+
+#### Was tun bei Verletzungen?
+Verletzungen sollten immer transparent berichtet werden. Informiere dich darüber, wie sensibel das verwendete statistische Verfahren auf solche Verletzungen reagiert. Falls Korrekturen vorgenommen werden (z.B. robuste Tests, Transformationen), ist es sinnvoll, die Analyse mit und ohne Korrektur durchzuführen und beide Ergebnisse anzugeben. Ein robuster Effekt sollte sich unter beiden Bedingungen zeigen. Dies ist z.B. hilfreich, wenn unklar ist, ob Ausreißer das Ergebnis verzerren. Ergänzend können simulationsbasierte Verfahren wie Bootstrapping oder Randomization Tests eingesetzt werden. Diese reduzieren die Abhängigkeit von theoretischen Annahmen und können die Robustheit der Ergebnisse erhöhen. 
+:::
+
+### Homoskedastizität
+
+#### Residual Plot
+
+Ähnlich wie in der ANOVA können wir einen Residual Plot verwenden um die Homoskedastizität zu überprüfen (s. @fig-residualplotanova). Die Residuen sind Abweichungen eines beobachteten Wertes von dem vorhergesagten Wert. In der Regression ist das die Abweichung eines Wert $y_{i}$ vom bedingten Erwartungswert $E(y_i | X_i = x_i)$. Konkret bedeutet das die Abweichung eines Werts von der Regressionsgeraden (in y). Die Regressionsgerade gibt an, welchen y-Wert wird basierend auf dem x-Wert erwarten würden ($E(y_i | X_i = x_i)$). Daher: $e_{i} = y_{i} - \hat y_i$. Im nächsten Schritt standardisieren wir die Residuen. Hier können wir uns die standardisierten Residuen einfach ausgeben lassen `rstandard(model_mlr)`.
+
+Ist die Varianzhomogenität gegeben, streuen die Werte zufällig um null. In diesem Fall zeigt sich das darin, dass wir keine Muster in den Residuen erkennen. Eine Verletzung anderer Voraussetzungen (Linearität, Unabhängigkeit der Messwerte, Ausreißer) kann sich ebenfalls im Residual Plot zeigen.
+
+```{r label=fig-residuenplotregression}
+# Extract standardized residuals and fitted values
+residuals <- rstandard(model_mlr)
+fitted_values <- fitted(model_mlr)
+
+# Plot residuals against fitted values
+plot(jitter(fitted_values), residuals, 
+     xlab = "Fitted Values", 
+     ylab = "Residuals", 
+     main = "Residuals")
+  abline(h = 0, col = "red") 
+
+```
+
+Hinweis: der Code für den obigen Residual Plot ist identisch zum Residual Plot der ANOVA (@fig-residualplotanova).
+
+### Linearität
+
+Um die Linearität zu überprüfen, können wir uns für die untersuchten Zusammenhänge Scatterplots mit lokalen Regressionslinien ("loess") untersuchen. Hier ist es empfehlenswert, sich den Scatterplot aus beiden Richtungen ausgeben zu lassen (beide Variablen jeweils auf der x und y-Achse). Wir können die Funktion zur Korrelationsmatrix aus @fig-ggpairscorplot anpassen, um die obere Hälfte ebenfalls mit Scatterplots zu füllen.
+
+Bei einer starken Verletzung oder bei non-linearen Zusammenhängen, können wir komplexere Verfahren (z.B. non-lineare Regression, quadratische Regression) verwenden.
+
+```{r label=fig-ggpairscatterplot, message=FALSE, warning=FALSE}
+ggpairs(df, columns = c("IQ", "Mathematiknote", "WMS4_delayed_recall"),
+        lower = list(continuous = wrap("smooth", method = "loess", se = TRUE)),
+        upper = list(continuous = wrap("smooth", method = "loess", se = TRUE)
+        )
+)
+```
+
+### Normalverteilung der Residuen
+
+Um die Normalverteilung der Residuen zu untersuchen, können wir wieder ein Histogram und einen QQ-Plot der Residuen erstellen. Der Code ist wieder identisch zum QQ-Plot in der ANOVA (@fig-qqplotanova).
+
+```{r label=fig-qqplotregression}
+# Wir extrahieren die residuen 
+residuals_mult_regression <- residuals(model_mlr)
+
+qqnorm(residuals_mult_regression, main = "QQ-Plot")
+qqline(residuals_mult_regression)
+```
+
+```{r label=fig-histregression}
+hist(rstandard(model_mlr))
+```
+
+Alternativ können wir die Schiefe und Kurtosis der Resiuden überprüfen. Bei Vorliegen der Normalverteilung sind diese Werte nahe Null. Die absoluten Werte sollten $\leq 1$ sein. Die Kurtosis kann etwas höher ausfallen, sollte jedoch $\leq 5$ sein.
+
+Schiefe:
+```{r}
+describe(residuals_mult_regression)$skew
+```
+
+Kurtosis:
+```{r}
+describe(residuals_mult_regression)$kurtosis
+```
+
+### Unabhöngigkeit der Residuen
+
+Das Regressionsmodell geht davon aus, dass die Fehler (Residuen) unkorreliert sind. Wenn diese korreliert sind, könnte in den Daten eine Beziehung vorliegen, welche wir im Modell nicht erfasst haben. Das würde dazu führen, dass wir verzerrte Standardfehler für unsere Regressionskoeffizienten erhalten. Insgesamt empfiehlt es sich, die Unabhänigkeit der Residuen visuell im Residuenplot (@fig-residuenplotregression) zu untersuchen. Wir wollen möglichst kein systematisches Muster erkennen.
+
+Zusätzlich kann der Durbin-Watson Test verwendet werden, um die Abhängigkeit aufeinander folgender Residuen zu testen. Dieser testet die $H_0$, ob eine Autokorrelation der Residuen vorliegt.
+
+```{r}
+durbinWatsonTest(model_mlr)
+```
+
+
+### Ausreißer
+
+Ausreißer können einen starken Einfluss auf die Regression haben (s. @fig-ascombe). Wir können sie ebenfalls im Residual Plot (@fig-residuenplotregression) oder in einem Scatterplot (@fig-ggpairscatterplot) identifizieren. Alternativ können wir festgelegte Kriterien anwenden, beispielsweise Werte ausschließen, welche z.B. 3 Standardabweichungen vom Mittelwert entfernt sind.
+
+```{r label=fig-ausreißer}
+# Mittelwert und Standardabweichung berechnen
+mean_value <- mean(df$Alter)
+sd_value <- sd(df$Alter)
+
+# Absoluter Abstand mehr als 3 SD
+df$outlier <- abs(df$Alter - mean_value) > (3 * sd_value)
+
+# Optional: Visualize outliers
+ggplot(df, aes(x = Alter, y = Offenheit)) +
+    geom_point(aes(color = outlier), alpha = 0.6) +
+    scale_color_manual(values = c("black", "red")) 
+```
+
+#### Multikollinearität
+
+Multikollinearität ist nur relevant, wenn wir mehrere Prädiktoren verwenden. Multikollinearität liegt vor, wenn sich unsere Prädiktoren einen erheblichen Anteil an gemeinsamer Varianz teilen. Dies kann dazu führen, dass wir einen Effekte nicht mehr dem jeweiligen Prädiktor zuordnen können.
+
+Zu erst sollten wir in einer Korrelationsmatrix überprüfen (s. @fig-ggpairscorplot), wie sehr unsere Prädiktoren korreliert sind. Hohe Korrelationen sind ein Indikator für Multikollinearität.
+
+Zudem können wir den Variance Inflation Factor (VIF) der Prädiktoren überprüfen. Dieser wird folgendermaßen berechnet: $VIF_1 = \frac {1}{1- R^2_{1 \cdot 2 ... p}}$. 1 geteilt durch die Varianz im Prädiktor, welche nicht durch die andere Prädiktoren erklärt werden kann. [check notation] Der VIF hat seinen Namen daher, dass er im Standardfehler des Regressionskoeffizienten enthalten ist und die Varianz, also auch den Standardfehler, in die Höhe treiben kann ("Inflation"). Dies kann dazu führen, dass wir Varianz im Modell aufklälren können ($R^2 \geq 0$), aber keiner der Präfiktoren signifikant wird.
+
+Häufig genannte Cutoff-Werte für den VIF sind $\leq$ 5 und $\leq$ 10. VIF $\leq$ 5 gilt als gut, VIF $\leq$ 10 gelten i.d.R. als okay.
+
+```{r}
+vif_values <- vif(model_mlr, type = "predictor")
+vif_values
+```
+
+Die Toleranz wird in SPSS zusätzlich zum VIF angegeben. Sie gibt den Nenner des VIF an und kann daher durch $\frac{1}{VIF}$ ermittelt werden.
+
+```{r label=fig-viftolerance}
+vif_values <- vif_values[1][[1]]
+tolerance_values <- 1 / vif_values[1]
+
+vif_table <- data.frame(
+  VIF = round(vif_values, 2),
+  Toleranz = round(tolerance_values, 2)
+)
+
+nice_table(vif_table, title = c("Tabelle 3", "VIF und Toleranz"))
+```
+
+
+##### Vorgehensweisen bei Multikollinearität 
+
+Beim Vorliegen von Multikollinearität können wir überlegen, Prädiktoren aus dem Modell zu entfernen oder mehrere Prädiktoren zu einem zusammenzufassen (z.B. Principal Component Anylsis, PCA).
+
+### Regression mit speziellen Prädiktoren
+
+#### MLR mit diskreten Prädiktor
+
+Hierfür müssen wir sogennante Dummy-Variablen erstellen. Hat der diskrete Prädiktor zwei Ausprägungen, legen wir eine der Kategorien als Referenzkategorie fest. Die Referenzkategorie kann frei gewählt werden, wir müssen uns jedoch für die Interpretation merken, welche Ausprägung wir als Referenz festgelegt haben.
+
+$D_i = 0$: Person $i$ gehört zur Referenzkategorie 
+$D_i = 1$: Person $i$ gehört nicht zur Referenzkategorie
+
+```{r}
+# Rekodieren zu Dummy Variable
+df <- df %>%
+  mutate(experimentalgruppe = case_when(
+    bedingung == "Experimental" ~ 1,
+    bedingung == "Kontroll" ~ 0,
+    TRUE ~ NA_real_  # Handles missing or unexpected values
+  ))
+```
+
+$Y_i = \alpha + \alpha_{kontrollgruppe} \cdot
+
+```{r}
+model_dummy_regression <- lm(Extraversion ~ experimentalgruppe + Neurotizismus + experimentalgruppe * Neurotizismus , data = df)
+
+summary(model_dummy_regression)
+```
+
+```{r label=fig-dummyscatter, warning=FALSE}
+# Add predicted values from the model
+df$ex_predicted <- predict(model_dummy_regression, newdata = df)
+
+# Plot mit zwei separaten Regressionslinien
+ggplot(df, aes(x = Neurotizismus, y = Extraversion, color = factor(experimentalgruppe))) +
+  geom_point(alpha = 0.6) +  # Scatter points
+  geom_line(data = df, aes(y = ex_predicted), linewidth = 1.2) +  # Regression lines
+  scale_color_manual(values = c("blue", "red"), labels = c(0, 1)) +
+  labs(x = "Neurotizismus", y = "Extraversion", color = "experimentalgruppe") +
+  theme_minimal()
+```
+
+*das Beispiel ergibt wenig Sinn* *evtl. auf gesamte Range anpassen*
+
+#### Quadratische Regression
+
+Wenn zwischen Prädiktor und Kriterium ein U-förmiger Zusammenhang besteht, kann es sinnvoll sein, den quadrierten Prädiktor in das Modell aufzunehmen. Idealerweise ist ein solcher Zusammenhang a-priori formuliert und theoretisch begründet. Alternativ kann bei einer Verletzung der Linearitätsannahme auch explorativ geprüft werden, ob ein nicht-linearer Zusammenhang vorliegt. Non-lineare Zusammenhänge in der Stichprobe können auch zufallsbedingt sein. Daher ist es nicht immer sinnvoll, einen explorativ gefundenen non-linearen Zusammenhang als solchen zu interpretieren. Wir können theoretisch auch Prädiktoren höherer Ordnung (bsp. $x_1^3$ oder $x_1^4$) ins Modell mit aufnehmen. In der Psychologie sind solche Zusammenhänge allerdings sehr selten und wir laufen Gefahr zu "overfitten", also unsystematische Varianz als systematisch zu interpretieren.
+
+Die folgende Scatterplot-Matrix zeigt, warum man die Linearität am besten aus beiden Perspektiven – also mit jeweils vertauschter x- und y-Achse – beurteilen sollte. Der U-förmige Zusammenhang zwischen der Leistung (`correct_items`) und dem Vertrauen in die eigene Kompetenz (`confidence`) wird in der Ansicht [1,3] mit correct_items auf der x-Achse deutlich klarer als in der Ansicht [3,1].
+
+```{r label=fig-ggpairsscatterplotquad, message=FALSE, warning=FALSE}
+ggpairs(df, columns = c("correct_items", "IQ", "confidence"),
+        lower = list(continuous = wrap("smooth", method = "loess", se = TRUE)),
+        upper = list(continuous = wrap("smooth", method = "loess", se = TRUE)
+        )
+)
+```
+
+Im statistischen Modell verwenden wir idR. den herkömmlichen Prädiktor ($\beta_1x_1$) und seine quadratische Variante ($\beta_2 x_1^2$). Die Interpretation des quadratischen Regressionskoeffizienten ist nicht mehr intutiv. Wenn $\beta_2 > 0$ ist der non-lineare Zusammenhang U-förmig. Wenn $\beta_2 < 0$ ist der non-lineare Zusammenhang umgekehrt-U-förmig (wie im folgenden Beispiel). Dies ist die selbe Logik wie bei Parabeln in der Mathematik ($y = x^2$ vs. $y = -x^2$)
+
+$$Y_i = \alpha + \beta_1 \cdot x_{i1} + \beta_2  \cdot x_{i2}^2 + \beta_3 \cdot x_{i3} + \epsilon_i$$ 
+
+```{r}
+model_mlr_squared <- lm(correct_items ~ confidence + I(confidence^2) + IQ, data = df)
+summary(lm.beta(model_mlr_squared))
+```
+
+
+
+# Bootstrapping
+
+Bootstrapping ist eine "Resampling"-Methode. Das bedeutet wir nutzen die vorliegende Stichprobe, um mehrere neue Stichproben zu ziehen. Wir mit Zurücklegen, das heißt eine Person wird in einer neuen Stichprobe auch mehrere male oder gar nicht vorkommen. In diesen Stichproben berechnen wir anschließen eine Statistik, sowie einen Mittelwert oder eine Effektgröße. Nun können wir uns anschauen, wie die Statistik in den Stichproben verteilt ist. Daher nutzen wir Bootstrapping, um die Präzision von Parameterschätzungen bestimmen.
+
+Meistens lassen wir uns ein 95%-Konfidenzintervall für einen Parameter ausgeben. Wie bei herkömmlichen Konfidenzintervallen gilt: ...
+
+```{r}
+# Define function to compute F-statistic
+boot_anova <- function(data, indices) {
+  sample_data <- data[indices, ]  # Resample data
+  
+  anova_result <- aov(wellbeing ~ therapy, data = sample_data)
+  
+  return(summary(anova_result)[[1]]["therapy", "F value"])  # Extract F-value
+}
+
+# Apply bootstrapping with 1000 resamples
+boot_result_anova <- boot(df_3_long, statistic = boot_anova, R = 1000)
+
+# View bootstrapped F-distribution
+print(boot_result_anova)
+
+```
+
+# Notes & footnotes
+
+-   auf type 3 sum of squares eingehen?
+-   auf empirische SD eingehen? \[\^Footnote\]
+-   long format \[\^Footnote\]
+-   evtl. darauf eingehen wie man bei MW eine ID hinzufügt
+- geplante Kontraste theoretische Fundierung
+- die Datensätze sollten aktualisiert werden
+- packages sollten speziell nochmal genannt werden, bevor sie genutzt werden
+
+# References
+
+
+
+

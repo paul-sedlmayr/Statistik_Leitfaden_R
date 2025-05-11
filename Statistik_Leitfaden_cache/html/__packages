@@ -20,3 +20,7 @@ lme4
 afex
 emmeans
 boot
+lm.beta
+flextable
+broom
+knitr
