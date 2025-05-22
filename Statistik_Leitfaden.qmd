@@ -68,6 +68,7 @@ library(lm.beta) # Standardiertes Regressionsgewicht
 library(flextable) # Tabelle in Word konvertieren
 library(broom) # Für schöne lm-Tabelle
 library(boot) # Bootstrapping
+library(pwr) # Power Analyse
 ```
 
 ::: callout-warning
@@ -80,8 +81,7 @@ Die meisten Funktionen in R sind gut dokumentiert. Für eine `funktion()` könne
 
 ```{r}
 #?library
-#?lm
-#?cor
+
 ```
 
 
@@ -336,7 +336,7 @@ Mit `var.equal` können wir angeben, ob Varianzhomogenität vorliegt. Wenn die V
 $H_0: \mu_1 = \mu_2$
 
 ```{r}
-t.test(Gewissenhaftigkeit ~ bedingung, data = df, var.equal = FALSE)
+t.test(correct_items ~ bedingung, data = df, var.equal = FALSE)
 ```
 
 ### t-Test über zwei abhängige Stichproben:
@@ -345,6 +345,23 @@ $H_0:$ Das well-being hat sich durch die Intervention nicht verändert.
 
 ```{r}
 t.test(df_2$wellbeing_t0 , df_2$wellbeing_t1, paired = TRUE)
+```
+
+### Effektgröße Cohen's $d$
+
+| Cohen’s $d$ | Interpretation   |
+|-------------|------------------|
+| ≈ 0.20      | Kleiner Effekt   |
+| ≈ 0.50      | Mittlerer Effekt |
+| ≈ 0.80      | Großer Effekt    |
+
+**Tabelle**: Typische Interpretation von Cohen’s $d$ gemäß gängiger Konventionen (Cohen, 1988).
+
+Für die Berechnung können wir die Funktion `cohens_d()` aus dem Package `effectsize()` verwenden.
+
+```{r}
+#t.test(correct_items ~ bedingung, data = df, var.equal = FALSE)
+cohens_d(correct_items ~ bedingung, data = df, var.equal = FALSE)
 ```
 
 ### Voraussetzungen t-Test
@@ -506,13 +523,21 @@ ggplot(df_2_long, aes(x = time, y = wellbeing, color = therapy_group, group = th
 
 ## Effektgrößen
 
-Das partielle Eta-Quadrat $\hat \eta_{par}^2$ können wir aus den Ergebnissen der gerechneten Varianzanalyse berechnen. Hierfür können wir die `eta_squared()`-Funktion aus dem Package `effectsize` verwenden. Diese berechnet zusätzlich ein 95%-iges Konfidenzintervall. Mit dem Parameter `partial = TRUE`, bzw. `generalized = TRUE` können wir uns speziell für das partielle oder generalisierte Eta-Quadrat entscheiden.
+| $\eta^2$ | Interpretation     |
+|----------|--------------------|
+| ≈ 0.01   | Kleiner Effekt     |
+| ≈ 0.06   | Mittlerer Effekt   |
+| ≈ 0.14   | Großer Effekt      |
+
+**Tabelle**: Typische Interpretation von Eta-Quadrat gemäß Konventionen (Cohen, 1988).
+
+Das partielle Eta-Quadrat $\hat \eta_{par}^2$ können wir in der Funktion `aov_ez()` mit ausgeben lassen `aov_ez(..., anova_table = list(es = "pes")`. Alternativ können wir es aus den Ergebnissen der gerechneten Varianzanalyse berechnen. Hierfür können wir die `eta_squared()`-Funktion aus dem Package `effectsize` verwenden. Diese berechnet zusätzlich ein 95%-iges Konfidenzintervall. Mit dem Parameter `partial = TRUE`, bzw. `generalized = TRUE` können wir uns speziell für das partielle oder generalisierte Eta-Quadrat entscheiden.
 
 ```{r eta_sq}
 effectsize::eta_squared(anova_mixed)
 ```
 
-Das Omega-Quadrat $\hat \omega^2_{par}$ ist eine korrigierte Alternative zum Eta-Quadrat. Das partielle Eta-Quadrat ist positiv gebiased: unsystematische Zufallsvarianz wird zum Teil für systematische Effektvarianz gehalten. Daher wird das partielle Omega-Quadrat korrigiert und fällt idR. kleiner aus als das partielle Eta-Quadrat. Wenn $\hat \omega^2_{par}$ negativ ausfällt, ist es auf 0.00 zu setzen.
+Das Omega-Quadrat $\hat \omega^2_{par}$ ist eine korrigierte Alternative zum Eta-Quadrat. Das Eta-Quadrat (partiell oder generalisiert) ist positiv gebiased: unsystematische Zufallsvarianz wird zum Teil für systematische Effektvarianz gehalten. Daher wird das partielle Omega-Quadrat korrigiert und fällt i.d.R. kleiner aus als das partielle Eta-Quadrat. Wenn $\hat \omega^2_{par}$ negativ ausfällt, ist es auf 0.00 zu setzen.
 
 ```{r}
 omega_squared(anova_mixed)
@@ -759,6 +784,14 @@ Das Ausschließen von Ausreißern ist ein kontroverses Thema. Im Zweifel lohnt e
 :::
 
 # Korrelation
+
+| $r$ (Pearson) | Interpretation   |
+|---------------|------------------|
+| ≈ 0.10         | Kleiner Effekt   |
+| ≈ 0.30         | Mittlerer Effekt |
+| ≈ 0.50         | Großer Effekt    |
+
+**Tabelle**: Typische Interpretation der Pearson-Korrelation $r$ gemäß Konventionen (Cohen, 1988).
 
 Mittels `cor()` können wir den Korrelationskoeffizienten berechnen. Im Parameter `use` können wir angeben, wie wir mit fehlenden Werten (`NA`) umgehen wollen.
 
@@ -1086,7 +1119,7 @@ df$experimentalgruppe <- ifelse(
 ```
 
 ```{r}
-model_dummy_regression <- lm(Extraversion ~ experimentalgruppe + Neurotizismus + experimentalgruppe * Neurotizismus , data = df)
+model_dummy_regression <- lm(numerical_ability ~ experimentalgruppe + IQ + experimentalgruppe * IQ , data = df)
 
 summary(model_dummy_regression)
 ```
@@ -1096,15 +1129,16 @@ summary(model_dummy_regression)
 df$ex_predicted <- predict(model_dummy_regression, newdata = df)
 
 # Plot mit zwei separaten Regressionslinien
-ggplot(df, aes(x = Neurotizismus, y = Extraversion, color = factor(experimentalgruppe))) +
+ggplot(df, aes(x = IQ, y = numerical_ability, color = factor(experimentalgruppe))) +
   geom_point(alpha = 0.6) +  # Scatter points
   geom_line(data = df, aes(y = ex_predicted), linewidth = 1.2) +  # Regression lines
   scale_color_manual(values = c("blue", "red"), labels = c(0, 1)) +
-  labs(x = "Neurotizismus", y = "Extraversion", color = "experimentalgruppe") +
-  theme_minimal()
-```
+  labs(x = "IQ", y = "Numerische Fähigkeiten", color = "experimentalgruppe") + 
+  theme_classic()
 
-*das Beispiel ergibt wenig Sinn* *evtl. auf gesamte Range anpassen*
+
+
+```
 
 ## Quadratische Regression
 
@@ -1120,7 +1154,7 @@ ggpairs(df, columns = c("correct_items", "IQ", "confidence"),
 )
 ```
 
-Im statistischen Modell verwenden wir idR. den herkömmlichen Prädiktor ($x_1$) und seine quadratische Variante ($x_1^2$). Die Interpretation des quadratischen Regressionskoeffizienten ist nicht mehr intuitiv: diese geben normalerweise die Steigung an. Im quadratischen Prädiktor hängt die Steigung von der Position auf der x-Achse ab. Wenn $\beta_3 > 0$, ist der non-lineare Zusammenhang U-förmig. Wenn $\beta_3 < 0$, ist der non-lineare Zusammenhang umgekehrt-U-förmig (wie im folgenden Beispiel). Dies ist die selbe Logik wie bei Parabeln in der Mathematik ($y = x^2$ vs. $y = -x^2$)
+Im statistischen Modell verwenden wir i.d.R. den herkömmlichen Prädiktor ($x_1$) und seine quadratische Variante ($x_1^2$). Die Interpretation des quadratischen Regressionskoeffizienten ist nicht mehr intuitiv: diese geben normalerweise die Steigung an. Im quadratischen Prädiktor hängt die Steigung von der Position auf der x-Achse ab. Wenn $\beta_3 > 0$, ist der non-lineare Zusammenhang U-förmig. Wenn $\beta_3 < 0$, ist der non-lineare Zusammenhang umgekehrt-U-förmig (wie im folgenden Beispiel). Dies ist die selbe Logik wie bei Parabeln in der Mathematik ($y = x^2$ vs. $y = -x^2$)
 
 $$Y_i = \alpha + \beta_1 \cdot x_{i1} +  \beta_2 \cdot x_{i2} + \beta_3  \cdot x_{i1}^2 + \epsilon_i$$
 
@@ -1182,6 +1216,46 @@ boot_result_anova <- boot(df_2_wide, statistic = boot_anova, R = 1000)
 print(boot_result_anova)
 
 ```
+# Power Analyse
+
+Die Power beschreibt die Wahrscheinlichkeit, einen Effekt zu finden, wenn es diesen wirklich in der Population gibt. Die Power hängt von den folgenden Parametern ab:
+- Stichprobengröße `n`
+- Effektgröße (z.B. Cohen's d)
+- Signifikanzniveau Alpha
+
+In der Regel wollen wir eine Power von .80 oder .90 erreichen. Das Signifikanzniveau Alpha legen wir fest (i.d.R. 0.05 oder 0.01). Da wir die Daten noch nicht erhoben haben, müssen wir die Effektgröße schätzen. Am besten greifen wir hierfür auf die Literatur zurück.
+
+
+Für die Power-Analyse in R eignet sich das Package `pwr()`. Um die benötigte Sichprobengröße zu berechnen, legen wir für unser Beispiel die Effektgröße als `d = 0.4`, die gewünschte Power auf `power = 0.8` und das Siginifikanzniveau auf `sig.level = 0.05` fest.
+
+#### Power-Analyse: t-Test über zwei unabhängige Stichproben
+
+```{r}
+pwr.t.test(d = 0.4,
+           power = 0.8,
+           sig.level = 0.05,
+           type = "two.sample",
+           alternative = "two.sided")
+```
+
+#### Power-Analyse: Eine einfaktorielle ANOVA mit balancierten Design
+
+Für die Power-Analyse in ANOVA müssen wir das Effektstärkenmaß $\eta^2$ zu erst umrechnenen, um $f$ zu bestimmen. $f$ ist das Verhältnis der Standardabweichung der Gruppenmittelwerte in der Population ($\sigma_{\mu}$) zu Standardabweichung innerhalb ($\sigma$).
+
+$$f = \frac{\sigma_{\mu}}{\sigma} = \sqrt{\frac{\eta^2}{1 - \eta^2}}$$ 
+
+Indem wir das geschätzte Eta-Quadrat $\hat \eta^2$ in die Formel einsetzen, können wir f schätzen. Wir gehen hier von einem Between-Subject Faktor mit 3 Stufen aus ($k = 3$).
+
+```{r}
+eta_square_estimated <- 0.08
+f_estimated <- sqrt(eta_square_estimated/(1-eta_square_estimated))
+
+pwr.anova.test(k = 3,
+               f = f_estimated,
+               power = 0.9,
+               sig.level = 0.05)
+```
+
 
 ## Weitere Ressourcen für R
 
@@ -1210,10 +1284,4 @@ ressourcen <- data.frame(
 kable(ressourcen, format = "markdown", align = "l", col.names = NA)
 ```
 
-# Notes & footnotes
 
--   auf type 3 sum of squares eingehen?
--   long format
--   evtl. darauf eingehen wie man bei MW eine ID hinzufügt
--   geplante Kontraste theoretische Fundierung
--   scheffe
