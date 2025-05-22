@@ -13,8 +13,8 @@ format:
       <img src="logo.png" style="position:absolute; top:10px; right:10px; height:50px;">
     theme: pulse
 page-layout: article
-bibliography: references.bib
-csl: chicago-fullnote-bibliography
+#bibliography: references.bib
+#csl: chicago-fullnote-bibliography
 execute:
   cache: false
 ---
