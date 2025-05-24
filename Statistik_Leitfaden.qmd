@@ -17,6 +17,7 @@ page-layout: article
 #csl: chicago-fullnote-bibliography
 execute:
   cache: false
+tbl-cap-location: top
 ---
 
 ```{r, echo=FALSE}
@@ -29,18 +30,20 @@ knitr::opts_chunk$set(tidy = TRUE, fig.width = 5, fig.height = 3, dev = "png",
 
 Dieser Leitfaden für statistische Datenanalyse in R soll als ergänzende Ressource zur Lehre an der Universität Graz dienen. Er richtet sich speziell an Studierende, die R für Bachelor- oder Masterarbeiten verwenden wollen, oder sich einfach mit den Grundlagen und Anwendungen statistischer Methoden in R vertraut machen möchten.
 
-Ziel ist es, eine kompakte und verständliche Anleitung bereitzustellen, die das eigenständige Arbeiten mit R erleichtert. Ich erhebe keinen Anspruch auf absolute Richtigkeit oder Vollständigkeit der Inhalte. Der Leitfaden wird regelmäßig aktualisiert. Falls Ihnen Fehler auffallen oder Sie Verbesserungsvorschläge haben, freue ich mich über eine Rückmeldung per E-Mail (`paul.sedlmayr@uni-graz.at`).
+Ziel ist es, eine kompakte und verständliche Anleitung bereitzustellen, die das eigenständige Arbeiten mit R erleichtert. Ich erhebe keinen Anspruch auf absolute Richtigkeit oder Vollständigkeit der Inhalte. Der Leitfaden wird regelmäßig aktualisiert. Falls Ihnen Fehler auffallen oder Sie Verbesserungsvorschläge haben, freuen wir uns über eine Rückmeldung per E-Mail (`paul.sedlmayr@uni-graz.at`, `maximilian.gerschuetz@uni-graz.at`).
 :::
 
 ::: callout-warning
-### Diese Seite ist noch nicht fertig gestellt.
+### Diese Seite ist noch nicht fertig gestellt und wird laufend aktualisiert.
+
+Wir freuen uns über Feedback & Anmerkungen!
 :::
 
 # Einführung
 
 #### Installation & Laden von Packages
 
-Im ersten Schritt installieren und laden wir Packages. Diese enthalten Funktionen, welche wir später nutzen werden. Wenn man ein Package, zum Beispiel das Package tidyverse, zum ersten Mal verwendet, muss man es mit der Funktion `install.packages("tidyverse")` installieren. Anschließend kann man es mit der Funktion `library(tidyverse)` laden. Bei `install.packages()` brauchen wir Anführungszeichen "", bei bereits heruntergeladenen Packages (`library()`) nicht.
+Im ersten Schritt installieren und laden wir Packages. Diese enthalten Funktionen, welche wir später nutzen werden. Wenn man ein Package, zum Beispiel das Package / die Library tidyverse, zum ersten Mal verwendet, muss man es mit der Funktion `install.packages("tidyverse")` installieren. Anschließend kann man es mit der Funktion `library(tidyverse)` laden. Bei `install.packages()` brauchen wir Anführungszeichen "", bei bereits heruntergeladenen Packages (`library()`) nicht.
 
 Um die Packages im folgenden Code zu installieren, entferne das `#` um den Kommentar `#install.packages("tidyverse")` zu einer Zeile Code zu verwandeln.
 
@@ -58,6 +61,7 @@ Um die Packages im folgenden Code zu installieren, entferne das `#` um den Komme
 library(tidyverse) # All-around package
 library(rempsyc) # Convenience-functions für Psychologie
 library(haven) # SPSS-Files (.sav) einlesen
+library(readxl) # Excel-Files (.xlsx) einlesen
 library(car) # Anova
 library(afex) # Anova
 library(emmeans) # Post-hoc Tests
@@ -77,13 +81,11 @@ Um Teile aus dem folgenden Code zu nutzen, müssen die jeweiligen Packages herun
 
 #### Wie funktionieren Funktionen
 
-Die meisten Funktionen in R sind gut dokumentiert. Für eine `funktion()` können in R mit dem Kommando `?funktion` die Dokumentation zur jeweiligen Funtion aufrufen. Alternativ kann man (rechts) unter "Help" eine Funktion suchen. Es ist lediglich zu beachten, dass eine Funktion aus einem externen Package (s. oben) zu erst über das Packafe geladen werden muss, um die Dokumentation einsehen zu können. Wenn wir die folgende Zeilen auskommentieren, können wir die Dokumention zur jeweiligen Funktion einsehen.
+Die meisten Funktionen in R sind gut dokumentiert. Für eine `funktion()` können in R mit dem Kommando `?funktion` die Dokumentation zur jeweiligen Funtion aufrufen. Alternativ kann man (rechts) unter "Help" eine Funktion suchen. Es ist lediglich zu beachten, dass eine Funktion aus einem externen Package (s. oben) zu erst über das Package geladen werden muss, um die Dokumentation einsehen zu können. Wenn wir die folgende Zeilen auskommentieren, können wir die Dokumention zur jeweiligen Funktion einsehen.
 
 ```{r}
 #?library
-
 ```
-
 
 #### Grundlegende Operatoren
 
@@ -149,32 +151,51 @@ vec_1 * 2
 
 ### Files einlesen
 
+::: callout-note
+#### Was ist ein Dataframe "df"?
+In R nutzen wir typischerweise Dataframes. Das ist ein anderer Name für eine Tabelle, wie man sie aus Microsoft Excel kennt. Meistens nutzt man daher die Abkürzung `df` für einen Dataframe.
+::: 
+
 Um ein File einzulesen, müssen wir den Pfad des Files angeben. Befinden sich das Skript und File im selben Ordner, genügt für das csv-File "`data_1.csv`" der Pfad `".//data_1.csv"`. Um den Pfad zum File nicht händisch schreiben zu müssen, eignet es sich, mit einem Rechtsklick und "Pfad kopieren" den Link zu kopieren. Bei Problemen kann man im Fenster "Environment" (normalerweise rechts oben) auf "Import Dataset" gehen und ein File manuell einlesen.
 
 ```{r file einlesen, message=FALSE}
-# CSV-Datei einlesen
 df <- read_csv('data_1.csv') 
 ```
 
 Um SPSS Files mit dem Typ `.sav` einzulesen, kann man folgende Funktion aus dem `haven`-Package verwenden:
 
 ```{r SPSS files einlesen, message=FALSE}
-# SAV-Datei einlesen
 df_sav <- read_sav(".//data_2.sav")
+```
+
+Um Excel Files mit dem Typ `.xlsx` einzulesen, kann man folgende Funktion aus dem `readxl`-Package verwenden:
+
+```{r XLSX files einlesen, message=FALSE}
+df_xlsx <- read_xlsx(".//data_2.xlsx")
 ```
 
 #### Überblick verschaffen
 
-Um sich einen Überblick über ein Datenfile zu verschaffen, eignen sich die folgenden Funktionen. Hinweis: `$` wird verwendet, um eine Spalte auszuwählen.
+Um sich einen Überblick über ein Datenfile zu verschaffen, eignen sich die folgenden Funktionen.
 
 ```{r}
 # Ersten fünf Zeilen
 head(df, 5)
+```
 
+Welche Spalten ("Columns") sind in meinem Dataframe?
+
+```{r}
 colnames(df)
+```
 
+Hinweis: `$` wird verwendet, um eine Spalte auszuwählen.
+```{r}
 summary(df$IQ)
+```
 
+Einfache Übersicht über Ausprägungen der Variable:
+```{r}
 table(df$bedingung)
 ```
 
@@ -203,6 +224,23 @@ df$experimentalgruppe <- ifelse(
 )
 ```
 
+### Filtern
+
+Eine einfache Art und Weise zu filtern, ist `filter()` aus dem `dplyr`-Package (Teil der `tidyverse`-Library). Wir schreiben `=` doppelt (`==`), da es sich um einen Vergleich handelt. Ein einfaches `=` wird verwendet wie der Assignmeent Operator `<-`. Daher bedeutet `=` in R meistens, dass man ein Objekt überschreiben will.
+
+Wenn wir nur Zeilen mit einem bestimmten Wert in einer Zelle filtern wollen:
+```{r}
+df_experimental <- df %>% filter(bedingung == "Experimental") 
+```
+
+Wenn wir Zeilen mit fehlenden Werten "`NA`" in einer einer Variable enfernen wollen, nutzen wir die `is.na()`-Funktion um `NA`-Werte zu erkennen. Das `!` ist eine Negation: wir wollen die Werte, die **nicht** `NA` sind.
+
+```{r}
+df_filtered <- df %>% filter(!is.na(bedingung)) 
+```
+
+
+
 ### z-Standardisierung & Zentrierung
 
 `mutate()` wird häufig verwendet, um Variablen zu transformieren. Um eine z-standardisierte Variable (hier: `BDI_z`) aus der herkömmlichen Variable (hier: `BDI`) zu erstellen, subtrahieren wir den Wert vom Mittelwert ("zentrieren") und teilen ihn durch die Standardabweichung ($z_i = \frac{x_i - \bar x}{s}$). Alternativ können wir auch die Funktion `scale()` verwenden.
@@ -217,7 +255,74 @@ In der Regression kann es sinnvoll sein, Werte zu zentrieren, um die Ergebnisse 
 df$BDI_c <- df$BDI - mean(df$BDI)
 ```
 
-## Wide Format vs. Long Format
+### Aus einzelnen Participant-Files ein Gesamt-File erstellen
+
+Wenn wir mit einem Programm wie *PsychoPy* arbeiten, wird für jeden Participant häufig eine separate Excel-Datei erzeugt. Eine zusammengeführter Dataframe liegt jedoch noch nicht vor und muss erst noch von uns erstellt werden. Wir gehen davon aus, dass sich alle `.xlsx`-Dateien im Ordner `data` befinden.
+
+::: callout-warning
+Dieser Ordner muss im gleichen Verzeichnis liegen wie das aktuelle R-Skript. Nur dann funktioniert der relative Pfad `./data` korrekt. Ein häufiger Fehler entsteht durch falsch gesetzte Pfade – zur Kontrolle kann man per Rechtsklick auf den `data`-Ordner den vollständigen Pfad kopieren (siehe auskommentiertes Beispiel unten).
+:::
+
+Der zentrale Trick: Wir nutzen `lapply()` und `do.call(rbind, ...)`, um die Daten aus allen Dateien zeilenweise zu einem Dataframe zusammenzufügen.
+
+```{r}
+# Ordnerpfad zu den Daten definieren
+folder_data <- "./data"  # Pfad anpassen!
+
+# Prüfen, ob der Datenordner existiert
+if (!dir.exists(folder_data)) {
+  stop("Datenordner nicht gefunden: ", folder_data)
+}
+
+# Liste aller Excel-Dateien im Ordner erstellen
+file_list <- list.files(path = folder_data, pattern = "\\.xlsx$", full.names = TRUE)
+
+# Alle Dateien einlesen und in eine Liste speichern
+data_list <- lapply(file_list, readxl::read_excel)
+
+# Alle Participants zu einem gemeinsamen Dataframe kombinieren
+df_combined <- do.call(rbind, data_list)
+```
+
+### Mittelwerte pro Participant bilden
+
+Wenn wir über einen Datensatz verfügen, in dem alle Trials aller Participants enthalten sind, müssen wir häufig noch Summen- oder Mittelwerte pro Participant und pro Bedingung berechnen. Im folgenden Beispiel berechnen wir den Mittelwert, die Standardabweichung und die Summe der korrekten Antworten (`key_resp_Trial.corr`) pro Participant (`Code`) und pro Bedingung (`SubTopic_Nr`).
+
+Hinweis: wie an den ersten Zeilen zu sehen ist, sind unsere Daten noch im long format. Das bedeutet, pro Participant gibt es so viele Zeilen wie die Bedingung (`SubTopic_Nr`) Levels hat. Für die Arbeit mit R ist dieses long Format oft nützlich, für SPSS benötigen wir i.d.R. das wide Format, also alle Werte eines Participants sind in einer Zeile. Das bedeutet, die Spalte der AV (hier z.B. `mean_pro_bedingung`) müsste auf mehrere Spalten aufgeteilt werden (z.B. `mean_bedingung_1`, `mean_bedingung_2`, ...).
+
+```{r}
+df_summary <- df_combined %>%
+  group_by(Code, SubTopic_Nr) %>%
+  summarise(mean_pro_bedingung = mean(key_resp_Trial.corr),
+            sd_pro_bedingung = sd(key_resp_Trial.corr),
+            sum_pro_bedingung = sum(key_resp_Trial.corr)) %>%
+  ungroup()
+
+head(df_summary, 3)
+```
+
+### Wide Format vs. Long Format
+
+```{r, include=FALSE}
+df_2 <- read_csv('.//data_2.csv')
+# Daten ins long-Format bringen: neue Spalte "time" mit Zeitpunkt sowie "wellbeing" mit Zellenwerten der alten Spalten
+colnames(df_2) <- as.character(colnames(df_2))
+
+df_2_long <- pivot_longer(data = df_2, cols = c("wellbeing_t0", "wellbeing_t1", "wellbeing_t2"), names_to = "time", values_to = "wellbeing")
+
+df_2_wide <- pivot_wider(data = df_2_long, names_from = "time", values_from = "wellbeing", id_cols = c("participant_id", "therapy", "therapy_group", "gender"))
+```
+
+
+```{r, echo = FALSE}
+#| label: tbl-longwide
+#| tbl-cap: "Vergleich: Wide Format (oben) vs. Long Format (unten)"
+
+
+knitr::kable(head(df_2_wide[, c(1, 2, 4, 5, 6, 7)], 5))
+knitr::kable(head(df_2_long[, -3], 5))
+```
+
 
 Das wide und long Format sind die häufigsten Strukturen von Datensätzen. Am besten erkennt man sie an den folgenden Kennzeichen: 1. Im **wide Format** hat jede Person **eine Zeile** 2. Im **long Format** hat jede Person **mehrere Zeilen**
 
@@ -245,38 +350,6 @@ Wenn wir die Daten nun zurück ins wide Format bringen wollen, geben wir die Spa
 df_2_wide <- pivot_wider(data = df_2_long, names_from = "time", values_from = "wellbeing", id_cols = c("participant_id", "therapy", "therapy_group", "gender"))
 
 head(df_2_wide)
-```
-
-## Aus einzelnen Participant-Files ein Gesamt-File erstellen
-
-Wenn wir mit einem Programm wie *PsychoPy* arbeiten, wird für jeden Participant häufig eine separate Excel-Datei erzeugt. Eine zusammengeführter Dataframe liegt jedoch noch nicht vor und muss erst noch von uns erstellt werden. Wir gehen davon aus, dass sich alle `.xlsx`-Dateien im Ordner `data` befinden. 
-
-:::callout-warning
-Dieser Ordner muss im gleichen Verzeichnis liegen wie das aktuelle R-Skript. Nur dann funktioniert der relative Pfad `./data` korrekt. Ein häufiger Fehler entsteht durch falsch gesetzte Pfade – zur Kontrolle kann man per Rechtsklick auf den `data`-Ordner den vollständigen Pfad kopieren (siehe auskommentiertes Beispiel unten).
-:::
-
-
-Der zentrale Trick: Wir nutzen `lapply()` und `do.call(rbind, ...)`, um die Daten aus allen Dateien zeilenweise zu einem Dataframe zusammenzufügen.
-
-
-```{r}
-# Ordnerpfad zu den Daten definieren
-folder_data <- "./data"  # ggf. Pfad anpassen!
-#folder_data <- "/Users/deinname/Projekte/Experiment_X/data"
-
-# Prüfen, ob der Datenordner existiert
-if (!dir.exists(folder_data)) {
-  stop("Datenordner nicht gefunden: ", folder_data)
-}
-
-# Liste aller Excel-Dateien im Ordner erstellen
-file_list <- list.files(path = folder_data, pattern = "\\.xlsx$", full.names = TRUE)
-
-# Alle Dateien einlesen und in eine Liste speichern
-data_list <- lapply(file_list, readxl::read_excel)
-
-# Alle Participants zu einem gemeinsamen Dataframe kombinieren
-df_combined <- do.call(rbind, data_list)
 ```
 
 
@@ -312,11 +385,19 @@ describe(df$Extraversion)
 # Statistische Verfahren
 
 ::: callout-important
-#### Die meisten Funktionen statistischer Verfahren sind folgendermaßen aufgebaut:
+#### Die Funktionen statistischer Verfahren sind meistens folgendermaßen aufgebaut:
 
-1.  `verfahren(Abhängige_Variable ~ Unabhängige_Variable, data = Datensatz)`.
+**1.  Formelbasiert :**
 
-2.  `verfahren(Variable_A, Variable_B)`.
+`verfahren(Abhängige_Variable ~ Unabhängige_Variable_1 + Unabhängige_Variable_2, data = Datensatz_df)`.
+
+**2.  Nicht-formelbasiert (direkte Übergabe von Variablen):**
+
+`verfahren(df$Variable_A, df$Variable_B)`.
+
+**3. Ausnahme** - Die Funktionen zur ANOVA aus dem `afex()`-Package:
+
+`aov_ez(id = "ProbandInnen-Code", dv = "Abhängige_Variable", between = ("Between_UV1", "Between_UV2"), within = ("Within_UV1", "Within_UV2"), data = Datensatz_df)` 
 :::
 
 # t-Test
@@ -355,7 +436,7 @@ t.test(df_2$wellbeing_t0 , df_2$wellbeing_t1, paired = TRUE)
 | ≈ 0.50      | Mittlerer Effekt |
 | ≈ 0.80      | Großer Effekt    |
 
-**Tabelle**: Typische Interpretation von Cohen’s $d$ gemäß gängiger Konventionen (Cohen, 1988).
+: Interpretation von Cohen’s $d$ nach Konventionen (Cohen, 1988) {#tbl-cohen_d}
 
 Für die Berechnung können wir die Funktion `cohens_d()` aus dem Package `effectsize()` verwenden.
 
@@ -421,18 +502,27 @@ Allgemein ist der t-Test ziemlich robust gegenüber Verletzungen der Voraussetzu
 
 Klassischerweise wird für die ANOVA häufig die Funktion `aov()` verwendet. Im Folgenden werden wir jedoch das Package `afex` nutzen, da dies u.a. Vorteile bei unbalancierten Stichproben und bei Messwiederholung (Within-Subject) hat. Hier können wir die Funktion `aov_ez()` verwenden.
 
-Diese Funktion benötigt allerdings eine Participant-ID (`id =`). Falls diese nicht vorhanden ist, können wir sie einfach hinzufügen, wenn es eine Zeile pro Participant gibt (wide Format). Wir zählen von 1 bis zur Gesamtanzahl der AV-Werte (`df_2_wide$wellbeing_t2)`) und fügen diese als `participant` hinzu. Gibt es einen Within-Subject Factor und die Daten sind im long Format ist das etwas komplizierter: bei einer Messwiederholung mit $m$ Stufen bedeutet das $m$ Zeilen pro Participant.
+Die `aov_ez()` Funktion benötigt allerdings eine Participant-ID (`id =`). Im Fall einer Messwiederholung ermöglich dies, dass die Zeilen eines Participants im long Format richtig zugeordnet werden können. Falls keine ID vorhanden ist, können wir sie einfach hinzufügen, wenn es eine Zeile pro Participant gibt (wide Format). Wir zählen von 1 bis zur Gesamtanzahl der AV-Werte (`df_2_wide$wellbeing_t2)`) und fügen diese als `participant_id` hinzu. Gibt es einen Within-Subject Factor und die Daten sind im long Format (siehe @tbl-longwide) ist das etwas komplizierter: bei einer Messwiederholung mit $m$ Stufen bedeutet das $m$ Zeilen pro Participant.
 
 ```{r, warning=FALSE}
-# ID Spalte pro Participant hinzufügen
+# Wide Format: ID Spalte pro Participant hinzufügen
 df_2_wide$participant_id <- c(1:length(df_2_wide$wellbeing_t2))
 
-# Between-UV's als Faktor konvertieren
+# Long Format: ID Spalte pro Participant hinzufügen 
+## Nur in Balancierten Design!
+df_2_long$participant_id <- rep(seq_len(nrow(df_2_long) / length(unique(df_2_long$time))), each = length(unique(df_2_long$time)))
+
+```
+
+Zudem sollten wir die UV's der ANOVA zu einem Faktor konvertieren:
+```{r}
+# Between-UV's zu Faktor konvertieren
 df_2_wide$therapy_group <- df_2_wide$therapy_group %>% as_factor()
 df_2_wide$gender <- df_2_wide$gender %>% as_factor()
 df_2_wide$therapy <- df_2_wide$therapy %>% as_factor()
 
-
+# Between-UV's zu Faktor konvertieren
+df_2_long$therapy_group <- df_2_long$therapy_group %>% as_factor()
 df_2_long$gender <- df_2_long$gender %>% as_factor()
 df_2_long$therapy <- df_2_long$therapy %>% as_factor()
 ```
@@ -523,13 +613,14 @@ ggplot(df_2_long, aes(x = time, y = wellbeing, color = therapy_group, group = th
 
 ## Effektgrößen
 
-| $\eta^2$ | Interpretation     |
-|----------|--------------------|
-| ≈ 0.01   | Kleiner Effekt     |
-| ≈ 0.06   | Mittlerer Effekt   |
-| ≈ 0.14   | Großer Effekt      |
 
-**Tabelle**: Typische Interpretation von Eta-Quadrat gemäß Konventionen (Cohen, 1988).
+| $\eta^2$ | Interpretation   |
+|----------|------------------|
+| ≈ 0.01   | Kleiner Effekt   |
+| ≈ 0.06   | Mittlerer Effekt |
+| ≈ 0.14   | Großer Effekt    |
+
+: Interpretation von Eta-Quadrat nach Konventionen (Cohen, 1988). {#tbl-eta}
 
 Das partielle Eta-Quadrat $\hat \eta_{par}^2$ können wir in der Funktion `aov_ez()` mit ausgeben lassen `aov_ez(..., anova_table = list(es = "pes")`. Alternativ können wir es aus den Ergebnissen der gerechneten Varianzanalyse berechnen. Hierfür können wir die `eta_squared()`-Funktion aus dem Package `effectsize` verwenden. Diese berechnet zusätzlich ein 95%-iges Konfidenzintervall. Mit dem Parameter `partial = TRUE`, bzw. `generalized = TRUE` können wir uns speziell für das partielle oder generalisierte Eta-Quadrat entscheiden.
 
@@ -787,11 +878,11 @@ Das Ausschließen von Ausreißern ist ein kontroverses Thema. Im Zweifel lohnt e
 
 | $r$ (Pearson) | Interpretation   |
 |---------------|------------------|
-| ≈ 0.10         | Kleiner Effekt   |
-| ≈ 0.30         | Mittlerer Effekt |
-| ≈ 0.50         | Großer Effekt    |
+| ≈ 0.10        | Kleiner Effekt   |
+| ≈ 0.30        | Mittlerer Effekt |
+| ≈ 0.50        | Großer Effekt    |
+: Interpretation der Pearson-Korrelation $r$ nach Konventionen (Cohen, 1988). {#tbl-Cohen_r}
 
-**Tabelle**: Typische Interpretation der Pearson-Korrelation $r$ gemäß Konventionen (Cohen, 1988).
 
 Mittels `cor()` können wir den Korrelationskoeffizienten berechnen. Im Parameter `use` können wir angeben, wie wir mit fehlenden Werten (`NA`) umgehen wollen.
 
@@ -890,7 +981,7 @@ model_slr_results[2] <- "WMS4 delayed recall" # WMS als Prädiktor
 model_slr_results
 ```
 
-```{r label=fig-niceslr}
+```{r label=tbl-niceslr}
 model_slr_results <- nice_table(model_slr_results, 
                                 title = c("Tabelle 1", "Zusammenhang von Gedächtnisfähigkeit (verzögerte Wiedergabe) und Intelligenz"),
                                 note = c(paste("Diese Tablle ist als Beispiel gedacht. Alle Zusammenhänge sind frei erfunden.", sep = " "), "* p < .05, ** p < .01, *** p < .001"))
@@ -928,7 +1019,7 @@ Wir können uns ganz einfach das Konfidenzintervall zum unstandardisierten Regre
 confint(model_mlr)
 ```
 
-```{r label=fig-nicemlr}
+```{r label=tbl-nicemlr}
 nice_table(model_mlr_table, 
            title = c("Tabelle 2", "Vorhersage der Intelligenz durch Gedächtnisfähigkeit (verzögerte Wiedergabe) und numerischen Fähigkeiten"),
            note = c(
@@ -1070,7 +1161,7 @@ vif_values
 
 Die Toleranz wird in SPSS zusätzlich zum VIF angegeben. Sie gibt den Nenner des VIF an und kann daher durch $\frac{1}{VIF}$ ermittelt werden.
 
-```{r label=fig-viftolerance}
+```{r label=tbl-viftolerance}
 vif_values <- vif_values[1][[1]]
 tolerance_values <- 1 / vif_values[1]
 
@@ -1216,15 +1307,12 @@ boot_result_anova <- boot(df_2_wide, statistic = boot_anova, R = 1000)
 print(boot_result_anova)
 
 ```
+
 # Power Analyse
 
-Die Power beschreibt die Wahrscheinlichkeit, einen Effekt zu finden, wenn es diesen wirklich in der Population gibt. Die Power hängt von den folgenden Parametern ab:
-- Stichprobengröße `n`
-- Effektgröße (z.B. Cohen's d)
-- Signifikanzniveau Alpha
+Die Power beschreibt die Wahrscheinlichkeit, einen Effekt zu finden, wenn es diesen wirklich in der Population gibt. Die Power hängt von den folgenden Parametern ab: - Stichprobengröße `n` - Effektgröße (z.B. Cohen's d) - Signifikanzniveau Alpha
 
 In der Regel wollen wir eine Power von .80 oder .90 erreichen. Das Signifikanzniveau Alpha legen wir fest (i.d.R. 0.05 oder 0.01). Da wir die Daten noch nicht erhoben haben, müssen wir die Effektgröße schätzen. Am besten greifen wir hierfür auf die Literatur zurück.
-
 
 Für die Power-Analyse in R eignet sich das Package `pwr()`. Um die benötigte Sichprobengröße zu berechnen, legen wir für unser Beispiel die Effektgröße als `d = 0.4`, die gewünschte Power auf `power = 0.8` und das Siginifikanzniveau auf `sig.level = 0.05` fest.
 
@@ -1240,9 +1328,9 @@ pwr.t.test(d = 0.4,
 
 #### Power-Analyse: Eine einfaktorielle ANOVA mit balancierten Design
 
-Für die Power-Analyse in ANOVA müssen wir das Effektstärkenmaß $\eta^2$ zu erst umrechnenen, um $f$ zu bestimmen. $f$ ist das Verhältnis der Standardabweichung der Gruppenmittelwerte in der Population ($\sigma_{\mu}$) zu Standardabweichung innerhalb ($\sigma$).
+Für die Power-Analyse in ANOVA müssen wir das Effektstärkenmaß $\eta^2$ zu erst umrechnenen, um $f$ zu bestimmen. $f$ ist ein Verhältnis der systematischen zur unsystematischen Varianz (die Standardabweichung der Gruppenmittelwerte in der Population ($\sigma_{\mu}$) geteilt durch die Standardabweichung innerhalb ($\sigma$).
 
-$$f = \frac{\sigma_{\mu}}{\sigma} = \sqrt{\frac{\eta^2}{1 - \eta^2}}$$ 
+$$f = \frac{\sigma_{\mu}}{\sigma} = \sqrt{\frac{\eta^2}{1 - \eta^2}}$$
 
 Indem wir das geschätzte Eta-Quadrat $\hat \eta^2$ in die Formel einsetzen, können wir f schätzen. Wir gehen hier von einem Between-Subject Faktor mit 3 Stufen aus ($k = 3$).
 
@@ -1255,7 +1343,6 @@ pwr.anova.test(k = 3,
                power = 0.9,
                sig.level = 0.05)
 ```
-
 
 ## Weitere Ressourcen für R
 
