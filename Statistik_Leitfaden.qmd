@@ -1036,7 +1036,7 @@ Die folgende Abbildung zeit die Relevanz der Prüfung der Voraussetzungen in der
 
 [Ascombe's Quartett auf Wikipedia](https://de.wikipedia.org/wiki/Anscombe-Quartett#/media/Datei:Anscombe's_quartet_3.svg)
 
-::: callout-tip
+::: callout-tip 
 ## Statistische Voraussetzungen
 
 Beim Testen der Voraussetzungen können wir entweder deskriptivstatistische oder inferenzstatistische Verfahren verwenden. Deskriptivstatistisch kann man die Verfahren mit Plots untersuchen (z.B. Residual Plots, QQ Plots). Inferenzstatistiche Verfahren werden mit Tests durchgeführt (z.B. Kolmogorov-Smirnov Test). Beide Herangehensweisen haben ihre Probleme: 1. Deskriptivstatistische Verfahren sind subjektiv 2. Inferenzstatistische Verfahren haben eine geringe Power in kleinen Stichproben, was dazu führt, dass sie Verletzungen nicht zeigen. In größeren Stichproben haben sie eine hohe Power und werden auch bei geringfügigen Verletzungen signifikant. Das ist ungünstig, da die Verletzungen vor allem in kleinen Stichproben relevant sind. In großen Stichproben und balancierten Designs sind Verfahren wie die ANOVA einigermaßen robust gegen einige der Verletzungen.
@@ -1071,6 +1071,13 @@ plot(jitter(fitted_values), residuals,
 ```
 
 Hinweis: der Code für den obigen Residual Plot ist identisch zum Residual Plot der ANOVA (@fig-residualplotanova).
+
+Alternativ können wir den Breusch-Pagan Test verwenden:
+
+```{r}
+library(lmtest)
+bptest(model_mlr)
+```
 
 ### Linearität
 
