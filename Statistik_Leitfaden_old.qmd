@@ -153,9 +153,8 @@ vec_1 * 2
 
 ::: callout-note
 #### Was ist ein Dataframe "df"?
-
 In R nutzen wir typischerweise Dataframes. Das ist ein anderer Name für eine Tabelle, wie man sie aus Microsoft Excel kennt. Meistens nutzt man daher die Abkürzung `df` für einen Dataframe.
-:::
+::: 
 
 Um ein File einzulesen, müssen wir den Pfad des Files angeben. Befinden sich das Skript und File im selben Ordner, genügt für das csv-File "`data_1.csv`" der Pfad `".//data_1.csv"`. Um den Pfad zum File nicht händisch schreiben zu müssen, eignet es sich, mit einem Rechtsklick und "Pfad kopieren" den Link zu kopieren. Bei Problemen kann man im Fenster "Environment" (normalerweise rechts oben) auf "Import Dataset" gehen und ein File manuell einlesen.
 
@@ -191,13 +190,11 @@ colnames(df)
 ```
 
 Hinweis: `$` wird verwendet, um eine Spalte auszuwählen.
-
 ```{r}
 summary(df$IQ)
 ```
 
 Einfache Übersicht über Ausprägungen der Variable:
-
 ```{r}
 table(df$bedingung)
 ```
@@ -232,7 +229,6 @@ df$experimentalgruppe <- ifelse(
 Eine einfache Art und Weise zu filtern, ist `filter()` aus dem `dplyr`-Package (Teil der `tidyverse`-Library). Wir schreiben `=` doppelt (`==`), da es sich um einen Vergleich handelt. Ein einfaches `=` wird verwendet wie der Assignmeent Operator `<-`. Daher bedeutet `=` in R meistens, dass man ein Objekt überschreiben will.
 
 Wenn wir nur Zeilen mit einem bestimmten Wert in einer Zelle filtern wollen:
-
 ```{r}
 df_experimental <- df %>% filter(bedingung == "Experimental") 
 ```
@@ -242,6 +238,8 @@ Wenn wir Zeilen mit fehlenden Werten "`NA`" in einer einer Variable enfernen wol
 ```{r}
 df_filtered <- df %>% filter(!is.na(bedingung)) 
 ```
+
+
 
 ### z-Standardisierung & Zentrierung
 
@@ -315,6 +313,7 @@ df_2_long <- pivot_longer(data = df_2, cols = c("wellbeing_t0", "wellbeing_t1", 
 df_2_wide <- pivot_wider(data = df_2_long, names_from = "time", values_from = "wellbeing", id_cols = c("participant_id", "therapy", "therapy_group", "gender"))
 ```
 
+
 ```{r, echo = FALSE}
 #| label: tbl-longwide
 #| tbl-cap: "Vergleich: Wide Format (oben) vs. Long Format (unten)"
@@ -323,6 +322,7 @@ df_2_wide <- pivot_wider(data = df_2_long, names_from = "time", values_from = "w
 knitr::kable(head(df_2_wide[, c(1, 2, 4, 5, 6, 7)], 5))
 knitr::kable(head(df_2_long[, -3], 5))
 ```
+
 
 Das wide und long Format sind die häufigsten Strukturen von Datensätzen. Am besten erkennt man sie an den folgenden Kennzeichen: 1. Im **wide Format** hat jede Person **eine Zeile** 2. Im **long Format** hat jede Person **mehrere Zeilen**
 
@@ -351,6 +351,7 @@ df_2_wide <- pivot_wider(data = df_2_long, names_from = "time", values_from = "w
 
 head(df_2_wide)
 ```
+
 
 # Deskriptive Statistik
 
@@ -386,17 +387,17 @@ describe(df$Extraversion)
 ::: callout-important
 #### Die Funktionen statistischer Verfahren sind meistens folgendermaßen aufgebaut:
 
-**1. Formelbasiert :**
+**1.  Formelbasiert :**
 
 `verfahren(Abhängige_Variable ~ Unabhängige_Variable_1 + Unabhängige_Variable_2, data = Datensatz_df)`.
 
-**2. Nicht-formelbasiert (direkte Übergabe von Variablen):**
+**2.  Nicht-formelbasiert (direkte Übergabe von Variablen):**
 
 `verfahren(df$Variable_A, df$Variable_B)`.
 
 **3. Ausnahme** - Die Funktionen zur ANOVA aus dem `afex()`-Package:
 
-`aov_ez(id = "ProbandInnen-Code", dv = "Abhängige_Variable", between = ("Between_UV1", "Between_UV2"), within = ("Within_UV1", "Within_UV2"), data = Datensatz_df)`
+`aov_ez(id = "ProbandInnen-Code", dv = "Abhängige_Variable", between = ("Between_UV1", "Between_UV2"), within = ("Within_UV1", "Within_UV2"), data = Datensatz_df)` 
 :::
 
 # t-Test
@@ -514,7 +515,6 @@ df_2_long$participant_id <- rep(seq_len(nrow(df_2_long) / length(unique(df_2_lon
 ```
 
 Zudem sollten wir die UV's der ANOVA zu einem Faktor konvertieren:
-
 ```{r}
 # Between-UV's zu Faktor konvertieren
 df_2_wide$therapy_group <- df_2_wide$therapy_group %>% as_factor()
@@ -612,6 +612,7 @@ ggplot(df_2_long, aes(x = time, y = wellbeing, color = therapy_group, group = th
 ```
 
 ## Effektgrößen
+
 
 | $\eta^2$ | Interpretation   |
 |----------|------------------|
@@ -880,8 +881,8 @@ Das Ausschließen von Ausreißern ist ein kontroverses Thema. Im Zweifel lohnt e
 | ≈ 0.10        | Kleiner Effekt   |
 | ≈ 0.30        | Mittlerer Effekt |
 | ≈ 0.50        | Großer Effekt    |
-
 : Interpretation der Pearson-Korrelation $r$ nach Konventionen (Cohen, 1988). {#tbl-Cohen_r}
+
 
 Mittels `cor()` können wir den Korrelationskoeffizienten berechnen. Im Parameter `use` können wir angeben, wie wir mit fehlenden Werten (`NA`) umgehen wollen.
 
@@ -1035,7 +1036,7 @@ Die folgende Abbildung zeit die Relevanz der Prüfung der Voraussetzungen in der
 
 [Ascombe's Quartett auf Wikipedia](https://de.wikipedia.org/wiki/Anscombe-Quartett#/media/Datei:Anscombe's_quartet_3.svg)
 
-::: callout-tip 
+::: callout-tip
 ## Statistische Voraussetzungen
 
 Beim Testen der Voraussetzungen können wir entweder deskriptivstatistische oder inferenzstatistische Verfahren verwenden. Deskriptivstatistisch kann man die Verfahren mit Plots untersuchen (z.B. Residual Plots, QQ Plots). Inferenzstatistiche Verfahren werden mit Tests durchgeführt (z.B. Kolmogorov-Smirnov Test). Beide Herangehensweisen haben ihre Probleme: 1. Deskriptivstatistische Verfahren sind subjektiv 2. Inferenzstatistische Verfahren haben eine geringe Power in kleinen Stichproben, was dazu führt, dass sie Verletzungen nicht zeigen. In größeren Stichproben haben sie eine hohe Power und werden auch bei geringfügigen Verletzungen signifikant. Das ist ungünstig, da die Verletzungen vor allem in kleinen Stichproben relevant sind. In großen Stichproben und balancierten Designs sind Verfahren wie die ANOVA einigermaßen robust gegen einige der Verletzungen.
@@ -1046,15 +1047,6 @@ Ich persönlich würde die deskriptivstatistischen Verfahren empfehlen. Im Zweif
 
 Verletzungen sollten immer transparent berichtet werden. Informiere dich darüber, wie sensibel das verwendete statistische Verfahren auf solche Verletzungen reagiert. Falls Korrekturen vorgenommen werden (z.B. robuste Tests, Transformationen), ist es sinnvoll, die Analyse mit und ohne Korrektur durchzuführen und beide Ergebnisse anzugeben. Ein robuster Effekt sollte sich unter beiden Bedingungen zeigen. Dies ist z.B. hilfreich, wenn unklar ist, ob Ausreißer das Ergebnis verzerren. Ergänzend können simulationsbasierte Verfahren wie Bootstrapping oder Randomization Tests eingesetzt werden. Diese reduzieren die Abhängigkeit von theoretischen Annahmen und können die Robustheit der Ergebnisse erhöhen.
 :::
-
-##### Alle Plots auf einen Blick
-
-R hat eine sehr simple Funktion, Plots zu den Voraussetzungen zu erstellen. Wir wenden einfach `plot()` am zuvor erstellen Regressions-Objekt an:
-
-```{r label=fig-regression_plots, fig.width=8, fig.height=6}
-model_mlr <- lm(IQ ~ numerical_ability + WMS4_delayed_recall + numerical_ability * WMS4_delayed_recall, data = df)
-plot(model_mlr)
-```
 
 ### Homoskedastizität
 
@@ -1079,13 +1071,6 @@ plot(jitter(fitted_values), residuals,
 ```
 
 Hinweis: der Code für den obigen Residual Plot ist identisch zum Residual Plot der ANOVA (@fig-residualplotanova).
-
-Alternativ können wir den Breusch-Pagan Test verwenden:
-
-```{r}
-library(lmtest)
-bptest(model_mlr)
-```
 
 ### Linearität
 
@@ -1385,3 +1370,5 @@ ressourcen <- data.frame(
 
 kable(ressourcen, format = "markdown", align = "l", col.names = NA)
 ```
+
+
