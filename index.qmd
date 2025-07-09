@@ -30,7 +30,7 @@ knitr::opts_chunk$set(tidy = TRUE, fig.width = 5, fig.height = 3, dev = "png",
 
 Dieser Leitfaden für statistische Datenanalyse in R soll als ergänzende Ressource zur Lehre an der Universität Graz dienen. Er richtet sich speziell an Studierende, die R für Bachelor- oder Masterarbeiten verwenden wollen, oder sich einfach mit den Grundlagen und Anwendungen statistischer Methoden in R vertraut machen möchten.
 
-Ziel ist es, eine kompakte und verständliche Anleitung bereitzustellen, die das eigenständige Arbeiten mit R erleichtert. Ich erhebe keinen Anspruch auf absolute Richtigkeit oder Vollständigkeit der Inhalte. Der Leitfaden wird regelmäßig aktualisiert. Falls Ihnen Fehler auffallen oder Sie Verbesserungsvorschläge haben, freuen wir uns über eine Rückmeldung per E-Mail (`paul.sedlmayr@uni-graz.at`, `maximilian.gerschuetz@uni-graz.at`).
+Ziel ist es, eine kompakte und verständliche Anleitung bereitzustellen, die das eigenständige Arbeiten mit R erleichtert. Wir erheben keinen Anspruch auf absolute Richtigkeit oder Vollständigkeit der Inhalte. Der Leitfaden wird regelmäßig aktualisiert. Falls Ihnen Fehler auffallen oder Sie Verbesserungsvorschläge haben, freuen wir uns über eine Rückmeldung per E-Mail (`paul.sedlmayr@uni-graz.at`, `maximilian.gerschuetz@uni-graz.at`).
 :::
 
 ::: callout-warning
@@ -435,7 +435,7 @@ t.test(df_2$wellbeing_t0 , df_2$wellbeing_t1, paired = TRUE)
 | ≈ 0.50      | Mittlerer Effekt |
 | ≈ 0.80      | Großer Effekt    |
 
-: Interpretation von Cohen’s $d$ nach Konventionen (Cohen, 1988) {#tbl-cohen_d}
+: Interpretation von Cohen’s $d$ nach Konventionen (Cohen, 1988). Die Bewertung der Effektgröße sollte jedoch kontextabhängig erfolgen, unter Berücksichtigung des Forschungsfelds und bisheriger Befunde. {#tbl-cohen_d}
 
 Für die Berechnung können wir die Funktion `cohens_d()` aus dem Package `effectsize()` verwenden.
 
@@ -601,17 +601,18 @@ interaction.plot(df_2_long$time, df_2_long$therapy_group, df_2_long$wellbeing, c
 
 Die Interaktionsplots können mit `interaction.plot()` leicht erstellt werden. Für detailliertere Grafiken bietet `ggplot()` allerdings deutlich mehr Optionen.
 
-```{r}
+```{r label=fig-interactionanova3, fig.width=7, fig.height=4}
 ggplot(df_2_long, aes(x = time, y = wellbeing, color = therapy_group, group = therapy_group)) +
   stat_summary(fun = mean, geom = "point", size = 2) +
   stat_summary(fun = mean, geom = "line") +
   stat_summary(fun.data = mean_se, geom = "errorbar", width = 0.2) +
   labs(title = "Well-Being über Zeit in Abhängigkeit von der Therapie ",
        x = "Zeit",
-       y = "Well-Being")
+       y = "Well-Being") + 
+  theme_minimal()
 ```
 
-## Effektgrößen
+## Effektgröße Eta-Quadrat $\hat \eta^2$
 
 | $\eta^2$ | Interpretation   |
 |----------|------------------|
@@ -619,9 +620,10 @@ ggplot(df_2_long, aes(x = time, y = wellbeing, color = therapy_group, group = th
 | ≈ 0.06   | Mittlerer Effekt |
 | ≈ 0.14   | Großer Effekt    |
 
-: Interpretation von Eta-Quadrat nach Konventionen (Cohen, 1988). {#tbl-eta}
+: Interpretation von Eta-Quadrat nach Konventionen (Cohen, 1988). Die Bewertung der Effektgröße sollte jedoch kontextabhängig erfolgen, unter Berücksichtigung des Forschungsfelds und bisheriger Befunde. {#tbl-eta}
 
 Das partielle Eta-Quadrat $\hat \eta_{par}^2$ können wir in der Funktion `aov_ez()` mit ausgeben lassen `aov_ez(..., anova_table = list(es = "pes")`. Alternativ können wir es aus den Ergebnissen der gerechneten Varianzanalyse berechnen. Hierfür können wir die `eta_squared()`-Funktion aus dem Package `effectsize` verwenden. Diese berechnet zusätzlich ein 95%-iges Konfidenzintervall. Mit dem Parameter `partial = TRUE`, bzw. `generalized = TRUE` können wir uns speziell für das partielle oder generalisierte Eta-Quadrat entscheiden.
+
 
 ```{r eta_sq}
 effectsize::eta_squared(anova_mixed)
@@ -881,7 +883,7 @@ Das Ausschließen von Ausreißern ist ein kontroverses Thema. Im Zweifel lohnt e
 | ≈ 0.30        | Mittlerer Effekt |
 | ≈ 0.50        | Großer Effekt    |
 
-: Interpretation der Pearson-Korrelation $r$ nach Konventionen (Cohen, 1988). {#tbl-Cohen_r}
+: Interpretation der Pearson-Korrelation $r$ nach Konventionen (Cohen, 1988). Die Bewertung der Effektgröße sollte jedoch auch kontextabhängig erfolgen, unter Berücksichtigung des Forschungsfelds und bisheriger Befunde. {#tbl-Cohen_r}
 
 Mittels `cor()` können wir den Korrelationskoeffizienten berechnen. Im Parameter `use` können wir angeben, wie wir mit fehlenden Werten (`NA`) umgehen wollen.
 
@@ -997,8 +999,13 @@ $$Y_i = \alpha + \beta_1 \cdot x_{i1} + \beta_2 \cdot x_{i2} + \beta_3 (x_{i1} \
 
 Die Syntax für die MLR bleibt gleich: wir fügen weiter Prädiktoren (UVs) mit `+` ein, sowie eine Interaktion durch `*`.
 
+Hinweis: wenn wir einen Interaktionsterm von zwei Prädiktoren ($x_1 \cdot x_2$) sowie die einzelnen Prädiktoren ($x_1$ und $x_2$) im Modell haben, sollten wir die Prädiktoren zurvor zentrieren. Das bedeutet, wir ziehen von jedem Wert den Mittelwert ab, ähnlich wie im Rahmen der z-Standardisierung. Das hat den folgenden Grund: wenn $x_1$ als einfacher Prädiktor auch im Interaktionsterm ($x_1 \cdot x_2$) vorkommt, sind der Prädiktor und der Interaktionsterm korreliert. Es könnte also zur Multikollinearität kommen, was die Schätzungen der Regressionsgewichte ($\beta_1$) und deren Standardfehler verzerrt. Im Folgenden erstellen wir neue Variablen: die zentrierten Prädiktoren und nutzen diese im Modell.
+
 ```{r}
-model_mlr <- lm(IQ ~ numerical_ability + WMS4_delayed_recall + numerical_ability * WMS4_delayed_recall, data = df)
+df$numerical_ability_cent <- as.vector(scale(df$numerical_ability, center = TRUE, scale = FALSE))
+df$WMS4_delayed_recall_cent <- as.vector(scale(df$WMS4_delayed_recall, center = TRUE, scale = FALSE))
+
+model_mlr <- lm(IQ ~ numerical_ability_cent + WMS4_delayed_recall_cent + numerical_ability_cent * WMS4_delayed_recall_cent, data = df)
 model_mlr_stan <- summary(lm.beta(model_mlr)) # für standardisiertes Regressionsgewicht
 
 model_mlr_stan
@@ -1052,7 +1059,8 @@ Verletzungen sollten immer transparent berichtet werden. Informiere dich darübe
 R hat eine sehr simple Funktion, Plots zu den Voraussetzungen zu erstellen. Wir wenden einfach `plot()` am zuvor erstellen Regressions-Objekt an:
 
 ```{r label=fig-regression_plots, fig.width=8, fig.height=6}
-model_mlr <- lm(IQ ~ numerical_ability + WMS4_delayed_recall + numerical_ability * WMS4_delayed_recall, data = df)
+model_mlr <- lm(IQ ~ numerical_ability_cent + WMS4_delayed_recall_cent + numerical_ability_cent * WMS4_delayed_recall_cent, data = df)
+
 plot(model_mlr)
 ```
 
@@ -1093,8 +1101,9 @@ Um die Linearität zu überprüfen, können wir uns für die untersuchten Zusamm
 
 Bei einer starken Verletzung oder bei non-linearen Zusammenhängen, können wir komplexere Verfahren (z.B. non-lineare Regression, quadratische Regression) verwenden.
 
-```{r label=fig-ggpairscatterplot, message=FALSE, warning=FALSE}
-ggpairs(df, columns = c("IQ", "numerical_ability", "WMS4_delayed_recall"),
+```{r label=fig-ggpairscatterplot2, message=FALSE, warning=FALSE}
+
+ggpairs(df, columns = c("IQ", "numerical_ability_cent", "WMS4_delayed_recall_cent"),
         lower = list(continuous = wrap("smooth", method = "loess", se = TRUE)),
         upper = list(continuous = wrap("smooth", method = "loess", se = TRUE)
         )
@@ -1159,7 +1168,7 @@ ggplot(df, aes(x = Alter, y = Offenheit)) +
     scale_color_manual(values = c("black", "red")) 
 ```
 
-#### Multikollinearität
+### Multikollinearität
 
 Multikollinearität ist nur relevant, wenn wir mehrere Prädiktoren verwenden. Multikollinearität liegt vor, wenn sich unsere Prädiktoren einen erheblichen Anteil an gemeinsamer Varianz teilen. Dies kann dazu führen, dass wir einen Effekte nicht mehr dem jeweiligen Prädiktor zuordnen können.
 
@@ -1169,15 +1178,14 @@ Zudem können wir den Variance Inflation Factor (VIF) der Prädiktoren überprü
 
 Häufig genannte Cutoff-Werte für den VIF sind $\leq$ 5 und $\leq$ 10. VIF $\leq$ 5 gilt als gut, VIF $\leq$ 10 gelten i.d.R. als okay.
 
-```{r}
-vif_values <- vif(model_mlr, type = "predictor")
+```{r, message = FALSE}
+vif_values <- vif(model_mlr)
 vif_values
 ```
 
 Die Toleranz wird in SPSS zusätzlich zum VIF angegeben. Sie gibt den Nenner des VIF an und kann daher durch $\frac{1}{VIF}$ ermittelt werden.
 
 ```{r label=tbl-viftolerance}
-vif_values <- vif_values[1][[1]]
 tolerance_values <- 1 / vif_values[1]
 
 vif_table <- data.frame(
@@ -1192,7 +1200,7 @@ nice_table(vif_table, title = c("Tabelle 3", "VIF und Toleranz"))
 
 Beim Vorliegen von Multikollinearität können wir überlegen, Prädiktoren aus dem Modell zu entfernen oder mehrere Prädiktoren zu einem zusammenzufassen (z.B. Principal Component Analysis, PCA).
 
-## MLR mit diskretem Prädiktor
+## Moderierte Regression mit diskretem Prädiktor
 
 $$Y_i = \alpha + \beta_{1} \cdot D_{i} + \beta_2 \cdot X_1 + \beta_3 (D_i \cdot X_1) + \epsilon_i$$
 
@@ -1209,7 +1217,6 @@ Y_i &= \alpha + \beta_{1} \cdot 0 + \beta_2 \cdot X_1 + \beta_3 (0 \cdot X_1) + 
     &= \alpha + \beta_2 \cdot X_1 + \epsilon_i
 \end{align}
 
-\[error: passt nicht zusammen\]
 
 ```{r, include=FALSE }
 df <- read_csv('.//data_1.csv')
@@ -1225,24 +1232,48 @@ df$experimentalgruppe <- ifelse(
 ```
 
 ```{r}
-model_dummy_regression <- lm(numerical_ability ~ experimentalgruppe + IQ + experimentalgruppe * IQ , data = df)
+df$IQ_cent <- as.vector(scale(df$IQ, center = TRUE, scale = FALSE))
+```
+
+```{r}
+model_dummy_regression <- lm(numerical_ability ~ experimentalgruppe + IQ_cent + experimentalgruppe * IQ_cent , data = df)
 
 summary(model_dummy_regression)
 ```
 
-```{r label=fig-dummyscatter, warning=FALSE}
-# Add predicted values from the model
-df$ex_predicted <- predict(model_dummy_regression, newdata = df)
+```{r label=fig-dummyscatter, warning=FALSE, fig.width=7, fig.height=5}
+pred <- predict(model_dummy_regression, newdata = df, se.fit = TRUE)
 
-# Plot mit zwei separaten Regressionslinien
+df$ex_predicted <- pred$fit
+df$se <- pred$se.fit
+df$lower <- df$ex_predicted - 1.96 * df$se
+df$upper <- df$ex_predicted + 1.96 * df$se
+
 ggplot(df, aes(x = IQ, y = numerical_ability, color = factor(experimentalgruppe))) +
-  geom_point(alpha = 0.6) +  # Scatter points
-  geom_line(data = df, aes(y = ex_predicted), linewidth = 1.2) +  # Regression lines
-  scale_color_manual(values = c("blue", "red"), labels = c(0, 1)) +
-  labs(x = "IQ", y = "Numerische Fähigkeiten", color = "experimentalgruppe") + 
+  geom_point(alpha = 0.6) +
+  geom_ribbon(
+    aes(ymin = lower, ymax = upper, fill = factor(experimentalgruppe)),
+    alpha = 0.2,
+    color = NA
+  ) +
+  geom_line(aes(y = ex_predicted), linewidth = 1.2) +
+  scale_color_manual(
+    name = "",
+    breaks = c("0", "1"),
+    values = c("0" = "#b2df8a", "1" = "#cab2d6"),
+    labels = c("Kontrollgruppe", "Experimentalgruppe")
+  ) +
+  scale_fill_manual(
+    name = "",
+    breaks = c("0", "1"),
+    values = c("0" = "#b2df8a", "1" = "#cab2d6"),
+    labels = c("Kontrollgruppe", "Experimentalgruppe")
+  ) +
+  labs(
+    x = "IQ",
+    y = "Numerische Fähigkeiten"
+  ) +
   theme_classic()
-
-
 
 ```
 
@@ -1264,12 +1295,19 @@ Im statistischen Modell verwenden wir i.d.R. den herkömmlichen Prädiktor ($x_1
 
 $$Y_i = \alpha + \beta_1 \cdot x_{i1} +  \beta_2 \cdot x_{i2} + \beta_3  \cdot x_{i1}^2 + \epsilon_i$$
 
+Auch hier müssen wir unseren Prädiktor, welcher sowohl einfach als auch quadratisch vorkommt, zentieren.
+
 ```{r}
-model_mlr_squared <- lm(correct_items ~ confidence + IQ + I(confidence^2), data = df)
+df$confidence_cent <- as.vector(scale(df$confidence, center = TRUE, scale = FALSE))
+```
+
+```{r}
+model_mlr_squared <- lm(correct_items ~ confidence_cent + IQ + I(confidence_cent^2), data = df)
 summary(lm.beta(model_mlr_squared))
 ```
 
 Auch, wenn sich das $\beta_2$ des Prädiktors $x_1^2$ nicht gut interpretieren lässt, können wir testen, wie sehr es den gesamt-Fit verbessert, also wie viel zusätzliche Varianz im Modell es erklärt. Hierfür vergleichen wir das $R^2$ im Model mit Prädiktor und ohne Prädiktor. Siehe hierarchische Regression.
+
 
 #### Hierarchische Regression
 
